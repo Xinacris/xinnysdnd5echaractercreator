@@ -6,7 +6,7 @@ function generateId(): string {
   return `char_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function createBlankCharacter(edition: SrdEdition = "2014"): Character {
+export function createBlankCharacter(edition: SrdEdition = "2024"): Character {
   const now = new Date().toISOString();
   return {
     id: generateId(),

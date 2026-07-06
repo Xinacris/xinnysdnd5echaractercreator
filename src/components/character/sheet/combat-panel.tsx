@@ -2,19 +2,23 @@
 
 import { useState } from "react";
 import { useSrdData } from "@/hooks/use-srd-data";
-import { getClassLevel, getClasses, getEquipment, getRaces } from "@/lib/srd/loader";
+import { getClassLevel, getClasses, getEquipment, getRaces, getSpellsForClass } from "@/lib/srd/loader";
 import { resolveEquippedArmor } from "@/lib/character/armor";
 import { isWeapon, weaponAbilityModifier } from "@/lib/srd/equipment-adapter";
+import { spellDamageText } from "@/lib/srd/text";
 import {
   abilityModifier,
   computeArmorClass,
   formatModifier,
   maxHitPoints,
   proficiencyBonus,
+  spellAttackBonus,
+  spellSaveDc,
   totalCharacterLevel,
   totalHitDice,
   unarmoredDefenseRule,
 } from "@/lib/character/calculations";
+import type { AbilityKey } from "@/lib/i18n/abilities";
 import type { Character } from "@/lib/character/types";
 import type { SrdEquipment } from "@/lib/srd/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +51,18 @@ export function CombatPanel({
     .filter((i) => i.equipped && i.equipmentIndex)
     .map((i) => equipment?.find((e) => e.index === i.equipmentIndex))
     .filter((e): e is SrdEquipment => e !== undefined && isWeapon(e));
+
+  const primaryClassIndex = character.classes[0]?.classIndex;
+  const selectedClass = classes?.find((c) => c.index === primaryClassIndex);
+  const classSpells = useSrdData(
+    () => (primaryClassIndex ? getSpellsForClass(character.edition, primaryClassIndex, 9) : Promise.resolve([])),
+    [character.edition, primaryClassIndex]
+  );
+  const spellcastingAbility = selectedClass?.spellcasting?.spellcasting_ability.index as AbilityKey | undefined;
+  const spellAbilityMod = spellcastingAbility ? abilityModifier(character.abilityScores[spellcastingAbility]) : 0;
+  const knownSpells = (classSpells ?? [])
+    .filter((s) => character.spellcasting.known.includes(s.index))
+    .sort((a, b) => a.level - b.level);
 
   const hitDiceByClass = (classes ?? []).map((c) => ({ classIndex: c.index, hitDie: c.hit_die }));
   const maxHp = maxHitPoints(character, hitDiceByClass, conMod);
@@ -129,7 +145,7 @@ export function CombatPanel({
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {equippedWeapons.length > 0 && (
+      {(equippedWeapons.length > 0 || knownSpells.length > 0) && (
         <Card className="md:col-span-2 xl:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -151,6 +167,22 @@ export function CombatPanel({
                       ` · Hasar ${damage.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""} ${damage.damage_type.name}`}
                     {versatile && ` (iki elle ${versatile.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""})`}
                   </span>
+                </div>
+              );
+            })}
+            {equippedWeapons.length > 0 && knownSpells.length > 0 && <Separator className="my-1" />}
+            {knownSpells.map((s) => {
+              const damageText = spellDamageText(s, totalCharacterLevel(character));
+              const parts: string[] = [];
+              if (s.attack_type) parts.push(`Vuruş ${formatModifier(spellAttackBonus(profBonus, spellAbilityMod))}`);
+              if (s.dc) parts.push(`KZ ${spellSaveDc(profBonus, spellAbilityMod)} (${s.dc.dc_type.name})`);
+              if (damageText) parts.push(`Hasar ${damageText}`);
+              return (
+                <div key={s.index} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+                  <span className="font-medium">
+                    {s.name} <span className="text-xs text-muted-foreground">({s.level === 0 ? "Kantrip" : `Sv. ${s.level}`})</span>
+                  </span>
+                  <span className="text-muted-foreground">{parts.join(" · ")}</span>
                 </div>
               );
             })}

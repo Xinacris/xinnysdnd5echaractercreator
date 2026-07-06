@@ -13,7 +13,7 @@ interface WizardContextValue {
 const WizardContext = createContext<WizardContextValue | null>(null);
 
 export function WizardProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<Character>(() => createBlankCharacter("2014"));
+  const [draft, setDraft] = useState<Character>(() => createBlankCharacter("2024"));
 
   const value = useMemo<WizardContextValue>(
     () => ({

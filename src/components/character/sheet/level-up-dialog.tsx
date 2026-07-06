@@ -9,8 +9,10 @@ import {
   getSubclassesForClass,
 } from "@/lib/srd/loader";
 import { ABILITY_ABBR, ABILITY_KEYS, type AbilityKey } from "@/lib/i18n/abilities";
-import { totalCharacterLevel } from "@/lib/character/calculations";
+import { abilityModifier, maxHitPoints, totalCharacterLevel, totalHitDice } from "@/lib/character/calculations";
 import { featureLevel } from "@/lib/srd/text";
+import { categorizeProficiencyIndex } from "@/lib/character/proficiency-utils";
+import { translateSkill } from "@/lib/i18n/skills";
 import type { Character, CharacterClassLevel } from "@/lib/character/types";
 import {
   Dialog,
@@ -23,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ReferenceChoicePicker } from "../reference-choice-picker";
 
 type HpMethod = "average" | "roll";
 
@@ -50,6 +53,7 @@ export function LevelUpDialog({
   const [rolledHp, setRolledHp] = useState<number | null>(null);
   const [asiChoice, setAsiChoice] = useState<Partial<Record<AbilityKey, number>>>({});
   const [subclassIndex, setSubclassIndex] = useState<string>("");
+  const [multiclassSelections, setMulticlassSelections] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (open) {
@@ -60,8 +64,14 @@ export function LevelUpDialog({
       setRolledHp(null);
       setAsiChoice({});
       setSubclassIndex("");
+      setMulticlassSelections({});
     }
   }, [open, character.classes]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear stale picks when the target class changes
+    setMulticlassSelections({});
+  }, [chosenClassIndex]);
 
   const existingEntry = character.classes.find((c) => c.classIndex === chosenClassIndex);
   const newLevel = (existingEntry?.level ?? 0) + 1;
@@ -81,6 +91,11 @@ export function LevelUpDialog({
     !existingEntry.subclassIndex &&
     subclassLevel === newLevel &&
     (subclassesForClass?.length ?? 0) > 0;
+
+  const isNewMulticlass = addingNewClass && !existingEntry && Boolean(chosenClassIndex);
+  const multiclassChoices = isNewMulticlass
+    ? (selectedClass?.multi_classing?.proficiency_choices ?? []).filter((c) => c.type === "proficiencies")
+    : [];
 
   const isAsiLevel = (allFeatures ?? []).some(
     (f) => f.class.index === chosenClassIndex && featureLevel(f) === newLevel && /ability score improvement/i.test(f.name)
@@ -137,10 +152,35 @@ export function LevelUpDialog({
       nextBaseScores[key as AbilityKey] += val ?? 0;
     }
 
+    const nextSkillProficiencies = new Set(character.skillProficiencies);
+    for (const indices of Object.values(multiclassSelections)) {
+      for (const idx of indices) {
+        const { category, cleanIndex } = categorizeProficiencyIndex(idx);
+        if (category === "skill") nextSkillProficiencies.add(cleanIndex);
+      }
+    }
+
+    // Leveling up counts as a long rest: full HP, hit dice/rage/spell slots recover the same way they would overnight.
+    const conMod = abilityModifier(nextAbilityScores.con);
+    const hitDiceByClass = (classes ?? []).map((c) => ({ classIndex: c.index, hitDie: c.hit_die }));
+    const leveledCharacter = { ...character, classes: nextClasses };
+    const newMaxHp = maxHitPoints(leveledCharacter, hitDiceByClass, conMod);
+    const newTotalDice = totalHitDice(leveledCharacter);
+    const diceToRestore = Math.max(1, Math.floor(newTotalDice / 2));
+
     onConfirm({
       classes: nextClasses,
       abilityScores: nextAbilityScores,
       baseAbilityScores: nextBaseScores,
+      skillProficiencies: Array.from(nextSkillProficiencies),
+      currentHitPoints: newMaxHp,
+      temporaryHitPoints: 0,
+      hitDiceUsed: Math.max(0, character.hitDiceUsed - diceToRestore),
+      rageUsed: 0,
+      deathSaves: { successes: 0, failures: 0 },
+      exhaustionLevel:
+        character.edition === "2024" ? Math.max(0, character.exhaustionLevel - 1) : character.exhaustionLevel,
+      spellcasting: { ...character.spellcasting, slotsUsed: {} },
     });
     onOpenChange(false);
   }
@@ -193,6 +233,33 @@ export function LevelUpDialog({
               </Select>
             )}
           </div>
+
+          {multiclassChoices.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <Label>{selectedClass?.name} Çoklu Sınıf Yetkinlikleri</Label>
+              {multiclassChoices.map((choice, i) => {
+                const key = `mc-${i}`;
+                const options = (choice.from.options ?? []).map((opt) => {
+                  const o = opt as { item: { index: string; name: string } };
+                  const { category, cleanIndex } = categorizeProficiencyIndex(o.item.index);
+                  const label =
+                    category === "skill"
+                      ? translateSkill(cleanIndex, o.item.name.replace(/^Skill: /, ""))
+                      : o.item.name.replace(/^(Tool|Skill): /, "");
+                  return { index: o.item.index, label };
+                });
+                return (
+                  <ReferenceChoicePicker
+                    key={key}
+                    options={options}
+                    choose={choice.choose}
+                    value={multiclassSelections[key] ?? []}
+                    onChange={(v) => setMulticlassSelections((prev) => ({ ...prev, [key]: v }))}
+                  />
+                );
+              })}
+            </div>
+          )}
 
           {chosenClassIndex && (
             <div className="flex flex-col gap-2">

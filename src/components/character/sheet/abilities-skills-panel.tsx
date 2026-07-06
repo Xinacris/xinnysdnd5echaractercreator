@@ -17,9 +17,21 @@ import {
 import type { Character } from "@/lib/character/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Check } from "lucide-react";
+
+/** Fixed proficiency indicator, not a toggle: saving throw and skill proficiencies are set at character creation (or granted by leveling/multiclassing) and can't be freely changed from the sheet. */
+function ProficiencyMark({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className="flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground"
+      data-checked={checked || undefined}
+    >
+      {checked && <Check className="size-3.5" />}
+    </span>
+  );
+}
 
 export function AbilitiesSkillsPanel({
   character,
@@ -49,24 +61,9 @@ export function AbilitiesSkillsPanel({
     onUpdate({ abilityScores: { ...character.abilityScores, [key]: value } });
   }
 
-  function toggleSkill(index: string, checked: boolean) {
-    const next = checked
-      ? [...character.skillProficiencies, index]
-      : character.skillProficiencies.filter((s) => s !== index);
-    const nextExpertise = checked ? character.skillExpertise : character.skillExpertise.filter((s) => s !== index);
-    onUpdate({ skillProficiencies: next, skillExpertise: nextExpertise });
-  }
-
   function toggleExpertise(index: string, checked: boolean) {
     const next = checked ? [...character.skillExpertise, index] : character.skillExpertise.filter((s) => s !== index);
     onUpdate({ skillExpertise: next });
-  }
-
-  function toggleSavingThrow(key: AbilityKey, checked: boolean) {
-    const next = checked
-      ? [...character.savingThrowProficiencies, key]
-      : character.savingThrowProficiencies.filter((s) => s !== key);
-    onUpdate({ savingThrowProficiencies: next });
   }
 
   const perceptionBonus = skills
@@ -118,13 +115,13 @@ export function AbilitiesSkillsPanel({
             const proficient = character.savingThrowProficiencies.includes(key);
             const bonus = savingThrowBonus(character.abilityScores[key], profBonus, proficient);
             return (
-              <label key={key} className="flex items-center justify-between gap-2 text-sm">
+              <div key={key} className="flex items-center justify-between gap-2 text-sm">
                 <span className="flex items-center gap-2">
-                  <Checkbox checked={proficient} onCheckedChange={(c) => toggleSavingThrow(key, c === true)} />
+                  <ProficiencyMark checked={proficient} />
                   {ABILITY_ABBR[key]}
                 </span>
                 <span className="font-medium">{formatModifier(bonus)}</span>
-              </label>
+              </div>
             );
           })}
           <div className="mt-2 flex flex-col gap-1 border-t border-border pt-2 text-sm text-muted-foreground">
@@ -153,10 +150,7 @@ export function AbilitiesSkillsPanel({
                 return (
                   <div key={skill.index} className="flex items-center justify-between gap-2 text-sm">
                     <span className="flex items-center gap-2">
-                      <Checkbox
-                        checked={proficient}
-                        onCheckedChange={(c) => toggleSkill(skill.index, c === true)}
-                      />
+                      <ProficiencyMark checked={proficient} />
                       <span className="w-8 text-xs text-muted-foreground">{ABILITY_ABBR[key]}</span>
                       {translateSkill(skill.index, skill.name)}
                       {proficient && expertiseSlots > 0 && (() => {
