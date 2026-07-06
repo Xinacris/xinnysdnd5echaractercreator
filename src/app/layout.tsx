@@ -4,6 +4,7 @@ import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ContentLanguageProvider } from "@/lib/i18n/content-language";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,11 +32,13 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <TooltipProvider>
-          <SiteHeader />
-          <main className="flex-1">{children}</main>
-          <Toaster theme="dark" />
-        </TooltipProvider>
+        <ContentLanguageProvider>
+          <TooltipProvider>
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <Toaster theme="dark" />
+          </TooltipProvider>
+        </ContentLanguageProvider>
       </body>
     </html>
   );

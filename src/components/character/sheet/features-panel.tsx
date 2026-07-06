@@ -14,7 +14,9 @@ import {
   subraceTraitRefs,
 } from "@/lib/srd/loader";
 import { normalizeBackground } from "@/lib/srd/background-adapter";
-import { featureDescription, featureLevel, traitDescription } from "@/lib/srd/text";
+import { featureLevel } from "@/lib/srd/text";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedFeatureDescription, localizedTraitDescription } from "@/lib/i18n/content-descriptions";
 import type { Character } from "@/lib/character/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -29,6 +31,7 @@ export function FeaturesPanel({
   character: Character;
   onUpdate: (patch: Partial<Character> | ((prev: Character) => Partial<Character>)) => void;
 }) {
+  const { language } = useContentLanguage();
   const races = useSrdData(() => getRaces(character.edition), [character.edition]);
   const subraces = useSrdData(
     () => (character.raceIndex ? getSubracesForRace(character.edition, character.raceIndex) : Promise.resolve([])),
@@ -104,7 +107,9 @@ export function FeaturesPanel({
               {raceTraits.map((t) => (
                 <AccordionItem key={t.index} value={t.index}>
                   <AccordionTrigger>{t.name}</AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground">{traitDescription(t)}</AccordionContent>
+                  <AccordionContent className="text-sm text-muted-foreground">
+                    {localizedTraitDescription(t, language)}
+                  </AccordionContent>
                 </AccordionItem>
               ))}
               {raceTraits.length === 0 && <p className="text-sm text-muted-foreground">Özellik bulunamadı.</p>}
@@ -154,7 +159,7 @@ export function FeaturesPanel({
                       {f.name} <span className="ml-2 text-xs text-muted-foreground">Sv. {featureLevel(f)}</span>
                     </AccordionTrigger>
                     <AccordionContent className="text-sm text-muted-foreground">
-                      {featureDescription(f)}
+                      {localizedFeatureDescription(f, language)}
                     </AccordionContent>
                   </AccordionItem>
                 ))}

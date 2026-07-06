@@ -5,8 +5,10 @@ import { useSrdData } from "@/hooks/use-srd-data";
 import { getClassLevel, getClasses, getEquipment, getFeatures, getRaces, getSpellsForClass } from "@/lib/srd/loader";
 import { resolveEquippedArmor } from "@/lib/character/armor";
 import { isWeapon, weaponAbilityModifier } from "@/lib/srd/equipment-adapter";
-import { featureDescription, spellDamageText, spellHealText } from "@/lib/srd/text";
+import { spellDamageText, spellHealText } from "@/lib/srd/text";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedFeatureDescription, localizedSpellDescription } from "@/lib/i18n/content-descriptions";
 import {
   abilityModifier,
   computeArmorClass,
@@ -37,6 +39,7 @@ export function CombatPanel({
   character: Character;
   onUpdate: (patch: Partial<Character> | ((prev: Character) => Partial<Character>)) => void;
 }) {
+  const { language } = useContentLanguage();
   const classes = useSrdData(() => getClasses(character.edition), [character.edition]);
   const equipment = useSrdData(() => getEquipment(character.edition), [character.edition]);
   const races = useSrdData(() => getRaces(character.edition), [character.edition]);
@@ -245,7 +248,7 @@ export function CombatPanel({
             {hasDivineSmite && (
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                 <span className="font-medium">
-                  <InfoTooltip description={featureDescription(divineSmiteFeature!)}>
+                  <InfoTooltip description={localizedFeatureDescription(divineSmiteFeature!, language)}>
                     Kutsal Vuruş (Divine Smite)
                   </InfoTooltip>
                 </span>
@@ -284,7 +287,7 @@ export function CombatPanel({
               return (
                 <div key={s.index} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">
-                    <InfoTooltip description={[...s.desc, ...(s.higher_level ?? [])].join(" ")}>{s.name}</InfoTooltip>{" "}
+                    <InfoTooltip description={localizedSpellDescription(s, language)}>{s.name}</InfoTooltip>{" "}
                     <span className="text-xs text-muted-foreground">({s.level === 0 ? "Kantrip" : `Sv. ${s.level}`})</span>
                   </span>
                   <span className="text-muted-foreground">{parts.join(" · ")}</span>

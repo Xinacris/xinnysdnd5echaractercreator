@@ -2,7 +2,8 @@
 
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getRaces, getSubracesForRace, getTraits, subraceTraitRefs } from "@/lib/srd/loader";
-import { traitDescription } from "@/lib/srd/text";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedTraitDescription } from "@/lib/i18n/content-descriptions";
 import type { AbilityKey } from "@/lib/i18n/abilities";
 import { ABILITY_ABBR, ABILITY_FULL_TR } from "@/lib/i18n/abilities";
 import { slugToTitle } from "@/lib/slug";
@@ -16,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { SrdTrait } from "@/lib/srd/types";
 
 export function StepRace() {
+  const { language } = useContentLanguage();
   const { draft, update } = useWizard();
   const races = useSrdData(() => getRaces(draft.edition), [draft.edition]);
   const subraces = useSrdData(
@@ -142,7 +144,7 @@ export function StepRace() {
                 <AccordionItem key={t.index} value={t.index}>
                   <AccordionTrigger>{t.name}</AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    {traitDescription(t)}
+                    {localizedTraitDescription(t, language)}
                   </AccordionContent>
                 </AccordionItem>
               ))}

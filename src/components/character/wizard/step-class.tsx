@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getClasses, getSubclassChoiceLevel, getSubclassesForClass } from "@/lib/srd/loader";
-import { subclassDescription } from "@/lib/srd/text";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedSubclassDescription } from "@/lib/i18n/content-descriptions";
 import { ABILITY_ABBR } from "@/lib/i18n/abilities";
 import type { AbilityKey } from "@/lib/i18n/abilities";
 import { useWizard } from "./wizard-context";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function StepClass() {
+  const { language } = useContentLanguage();
   const { draft, update } = useWizard();
   const classes = useSrdData(() => getClasses(draft.edition), [draft.edition]);
   const primaryClass = draft.classes[0];
@@ -125,7 +127,7 @@ export function StepClass() {
             <p className="text-sm text-muted-foreground">
               {(() => {
                 const sub = subclasses!.find((s) => s.index === draft.classes[0].subclassIndex);
-                return sub ? subclassDescription(sub) : null;
+                return sub ? localizedSubclassDescription(sub, language) : null;
               })()}
             </p>
           )}

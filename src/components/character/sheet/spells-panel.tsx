@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedSpellDescription } from "@/lib/i18n/content-descriptions";
 
 export function SpellsPanel({
   character,
@@ -30,6 +32,7 @@ export function SpellsPanel({
   character: Character;
   onUpdate: (patch: Partial<Character>) => void;
 }) {
+  const { language } = useContentLanguage();
   const classIndex = character.classes[0]?.classIndex;
   const classLevel = character.classes[0]?.level ?? 1;
   const [open, setOpen] = useState(false);
@@ -162,7 +165,7 @@ export function SpellsPanel({
                         <CommandItem key={s.index} value={s.name} onSelect={() => addSpell(s.index)}>
                           <span className="flex flex-1 items-center gap-1.5">
                             {s.name}
-                            <InfoTooltip description={s.desc.join(" ")}>
+                            <InfoTooltip description={localizedSpellDescription(s, language)}>
                               <Info className="h-3.5 w-3.5 text-muted-foreground" />
                             </InfoTooltip>
                           </span>
@@ -193,7 +196,7 @@ export function SpellsPanel({
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-2 text-sm text-muted-foreground">
-                  <p>{spell.desc.join(" ")}</p>
+                  <p>{localizedSpellDescription(spell, language)}</p>
                   <p className="text-xs">
                     Menzil: {spell.range} · Süre: {spell.duration} · Zamanlama: {spell.casting_time}
                   </p>

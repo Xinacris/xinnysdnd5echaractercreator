@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ContentLanguageToggle } from "./content-language-toggle";
 
 export function SiteHeader() {
   return (
@@ -11,6 +12,7 @@ export function SiteHeader() {
           <span>D&D Karakter Oluşturucu</span>
         </Link>
         <nav className="flex items-center gap-2">
+          <ContentLanguageToggle />
           <Button asChild size="sm">
             <Link href="/karakter/yeni">Yeni Karakter</Link>
           </Button>

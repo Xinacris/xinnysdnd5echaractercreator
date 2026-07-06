@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getClass, getClassLevel, getSpellsForClass } from "@/lib/srd/loader";
 import { abilityModifier } from "@/lib/character/calculations";
+import { useContentLanguage } from "@/lib/i18n/content-language";
+import { localizedSpellDescription } from "@/lib/i18n/content-descriptions";
 import type { AbilityKey } from "@/lib/i18n/abilities";
 import { useWizard } from "./wizard-context";
 import { ReferenceChoicePicker } from "../reference-choice-picker";
@@ -12,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 export function StepSpells() {
+  const { language } = useContentLanguage();
   const { draft, update } = useWizard();
   const classIndex = draft.classes[0]?.classIndex;
 
@@ -88,7 +91,7 @@ export function StepSpells() {
         <div className="flex flex-col gap-2">
           <Label>Kantrip Seç ({currentCantrips.length} / {cantripsKnown})</Label>
           <ReferenceChoicePicker
-            options={cantrips.map((s) => ({ index: s.index, label: s.name, description: s.desc.join(" ") }))}
+            options={cantrips.map((s) => ({ index: s.index, label: s.name, description: localizedSpellDescription(s, language) }))}
             choose={cantripsKnown}
             value={currentCantrips}
             onChange={setCantrips}
@@ -102,7 +105,7 @@ export function StepSpells() {
             {classIndex === "wizard" ? "Büyü Kitabı" : "Hazırlanan Büyüler"} ({currentLeveled.length} / {knownCount})
           </Label>
           <ReferenceChoicePicker
-            options={leveledSpells.map((s) => ({ index: s.index, label: s.name, description: s.desc.join(" ") }))}
+            options={leveledSpells.map((s) => ({ index: s.index, label: s.name, description: localizedSpellDescription(s, language) }))}
             choose={knownCount}
             value={currentLeveled}
             onChange={setLeveled}
