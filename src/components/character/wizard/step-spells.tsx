@@ -88,7 +88,7 @@ export function StepSpells() {
         <div className="flex flex-col gap-2">
           <Label>Kantrip Seç ({currentCantrips.length} / {cantripsKnown})</Label>
           <ReferenceChoicePicker
-            options={cantrips.map((s) => ({ index: s.index, label: s.name }))}
+            options={cantrips.map((s) => ({ index: s.index, label: s.name, description: s.desc.join(" ") }))}
             choose={cantripsKnown}
             value={currentCantrips}
             onChange={setCantrips}
@@ -102,7 +102,7 @@ export function StepSpells() {
             {classIndex === "wizard" ? "Büyü Kitabı" : "Hazırlanan Büyüler"} ({currentLeveled.length} / {knownCount})
           </Label>
           <ReferenceChoicePicker
-            options={leveledSpells.map((s) => ({ index: s.index, label: s.name }))}
+            options={leveledSpells.map((s) => ({ index: s.index, label: s.name, description: s.desc.join(" ") }))}
             choose={knownCount}
             value={currentLeveled}
             onChange={setLeveled}

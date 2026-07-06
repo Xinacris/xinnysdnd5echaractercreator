@@ -128,6 +128,7 @@ export interface SrdFeature extends SrdRef {
   description?: string;
   class: SrdRef;
   subclass?: SrdRef;
+  feature_specific?: Record<string, unknown>;
 }
 
 // ---------- Races / Species ----------

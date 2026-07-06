@@ -240,7 +240,7 @@ export function CombatPanel({
             1 Zar Harca
           </Button>
           <Separator />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={shortRest}>
               <Sun className="h-4 w-4" /> Kısa Dinlenme
             </Button>

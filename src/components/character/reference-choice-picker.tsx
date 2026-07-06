@@ -3,10 +3,12 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { InfoTooltip } from "@/components/info-tooltip";
 
 export interface ChoiceOption {
   index: string;
   label: string;
+  description?: string;
 }
 
 export function ReferenceChoicePicker({
@@ -27,7 +29,7 @@ export function ReferenceChoicePicker({
           <div key={opt.index} className="flex items-center gap-2">
             <RadioGroupItem value={opt.index} id={`ref-${opt.index}`} />
             <Label htmlFor={`ref-${opt.index}`} className="font-normal">
-              {opt.label}
+              {opt.description ? <InfoTooltip description={opt.description}>{opt.label}</InfoTooltip> : opt.label}
             </Label>
           </div>
         ))}
@@ -61,7 +63,7 @@ export function ReferenceChoicePicker({
               onCheckedChange={(c) => toggle(opt.index, c === true)}
             />
             <Label htmlFor={`ref-${opt.index}`} className={`font-normal ${disabled ? "text-muted-foreground" : ""}`}>
-              {opt.label}
+              {opt.description ? <InfoTooltip description={opt.description}>{opt.label}</InfoTooltip> : opt.label}
             </Label>
           </div>
         );

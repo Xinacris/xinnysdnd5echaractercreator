@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Info, Plus, X } from "lucide-react";
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getClass, getClassLevel, getSpellsForClass } from "@/lib/srd/loader";
 import { abilityModifier, proficiencyBonus, spellAttackBonus, spellSaveDc, totalCharacterLevel } from "@/lib/character/calculations";
@@ -21,6 +21,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/info-tooltip";
 
 export function SpellsPanel({
   character,
@@ -68,6 +69,10 @@ export function SpellsPanel({
     level: lvl,
     total: (levelData?.spellcasting?.[`spell_slots_level_${lvl}`] as number | undefined) ?? 0,
   })).filter((s) => s.total > 0);
+
+  /** Only spells the character can actually cast right now: cantrips plus levels covered by their current spell slots. */
+  const maxSpellLevel = slotLevels.length > 0 ? Math.max(...slotLevels.map((s) => s.level)) : 0;
+  const addableSpells = (classSpells ?? []).filter((s) => s.level === 0 || s.level <= maxSpellLevel);
 
   function toggleSlotUsed(level: number, slotIdx: number) {
     const used = character.spellcasting.slotsUsed[level] ?? 0;
@@ -151,11 +156,16 @@ export function SpellsPanel({
                 <CommandList>
                   <CommandEmpty>Bulunamadı.</CommandEmpty>
                   <CommandGroup>
-                    {(classSpells ?? [])
+                    {addableSpells
                       .filter((s) => !character.spellcasting.known.includes(s.index))
                       .map((s) => (
                         <CommandItem key={s.index} value={s.name} onSelect={() => addSpell(s.index)}>
-                          {s.name}
+                          <span className="flex flex-1 items-center gap-1.5">
+                            {s.name}
+                            <InfoTooltip description={s.desc.join(" ")}>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                            </InfoTooltip>
+                          </span>
                           <Badge variant="outline" className="ml-auto text-[10px]">
                             {s.level === 0 ? "Kantrip" : `Sv. ${s.level}`}
                           </Badge>
