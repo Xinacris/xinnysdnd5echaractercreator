@@ -27,24 +27,43 @@ export function BackgroundAbilityAllocator({
   const [plusTwo, setPlusTwo] = useState<AbilityKey>(
     (Object.entries(value).find(([, v]) => v === 2)?.[0] as AbilityKey) ?? keys[0]
   );
+  const [plusOne, setPlusOne] = useState<AbilityKey>(
+    (Object.entries(value).find(([k, v]) => v === 1 && k !== plusTwo)?.[0] as AbilityKey) ??
+      keys.find((k) => k !== plusTwo) ??
+      keys[0]
+  );
 
-  function applyPattern(p: Pattern, twoKey: AbilityKey) {
+  function applyPattern(p: Pattern, twoKey: AbilityKey, oneKey: AbilityKey) {
     setPattern(p);
     setPlusTwo(twoKey);
+    setPlusOne(oneKey);
     if (p === "1-1-1") {
       onChange(Object.fromEntries(keys.map((k) => [k, 1])));
     } else {
-      onChange(Object.fromEntries(keys.map((k) => [k, k === twoKey ? 2 : 1])));
+      onChange(
+        Object.fromEntries(
+          keys.filter((k) => k === twoKey || k === oneKey).map((k) => [k, k === twoKey ? 2 : 1])
+        )
+      );
     }
+  }
+
+  function handlePlusTwoChange(newTwoKey: AbilityKey) {
+    const newOneKey = plusOne === newTwoKey ? (keys.find((k) => k !== newTwoKey) ?? plusOne) : plusOne;
+    applyPattern("2-1", newTwoKey, newOneKey);
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <RadioGroup value={pattern} onValueChange={(v) => applyPattern(v as Pattern, plusTwo)} className="gap-2">
+      <RadioGroup
+        value={pattern}
+        onValueChange={(v) => applyPattern(v as Pattern, plusTwo, plusOne)}
+        className="gap-2"
+      >
         <div className="flex items-center gap-2">
           <RadioGroupItem value="2-1" id="pattern-2-1" />
           <Label htmlFor="pattern-2-1" className="font-normal">
-            Birine +2, diğerine +1
+            Birine +2, başka birine +1
           </Label>
         </div>
         <div className="flex items-center gap-2">
@@ -56,20 +75,39 @@ export function BackgroundAbilityAllocator({
       </RadioGroup>
 
       {pattern === "2-1" && (
-        <div className="flex items-center gap-2">
-          <Label className="whitespace-nowrap">+2 alacak özellik:</Label>
-          <Select value={plusTwo} onValueChange={(v) => applyPattern("2-1", v as AbilityKey)}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {keys.map((k) => (
-                <SelectItem key={k} value={k}>
-                  {ABILITY_ABBR[k]} ({ABILITY_FULL_TR[k]})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">+2 alacak özellik:</Label>
+            <Select value={plusTwo} onValueChange={(v) => handlePlusTwoChange(v as AbilityKey)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {keys.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {ABILITY_ABBR[k]} ({ABILITY_FULL_TR[k]})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">+1 alacak özellik:</Label>
+            <Select value={plusOne} onValueChange={(v) => applyPattern("2-1", plusTwo, v as AbilityKey)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {keys
+                  .filter((k) => k !== plusTwo)
+                  .map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {ABILITY_ABBR[k]} ({ABILITY_FULL_TR[k]})
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
