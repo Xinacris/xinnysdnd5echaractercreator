@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# D&D 5e / 5.5e Karakter Oluşturucu
 
-## Getting Started
+D&D Beyond / zindanlar.com tarzı, tarayıcıda çalışan bir Dungeons & Dragons karakter oluşturucu. Karakterler tarayıcının `localStorage`'ında saklanır; depolama katmanı ileride bir backend'e bağlanabilecek şekilde soyutlanmıştır.
 
-First, run the development server:
+Hem **D&D 5e (2014 SRD)** hem **D&D 5.5e (2024 SRD)** kural setini destekler — karakter oluştururken hangisini kullanacağını seçersin.
+
+## Özellikler
+
+- **Karakter oluşturma sihirbazı**: ırk/tür, sınıf (+ gerektiğinde alt sınıf), yetenek puanı ataması (standart dizi / puan alışverişi / zar / manuel), beceriler, başlangıç ekipmanı (SRD'nin iç içe seçim kurallarını — "(a) zincir zırh ya da (b) deri zırh + uzun yay" gibi — tam destekler), 1. seviyede büyü seçimi.
+- **Karakter sayfası**: yetenek puanları, beceriler, kurtulma zarları, can puanı/zırh sınıfı/inisiyatif, vuruş zarları ve kısa/uzun dinlenme, ölüm kurtarma zarları, envanter (arama ile eşya ekleme + para birimi), büyüler (yuva takibi), ırk/sınıf/alt sınıf/background özellikleri, oyuncu notları.
+- **Seviye atlama**: can puanı artışı (ortalama ya da zar), yetenek puanı artışı (ASI) ve alt sınıf seçimi doğru seviyelerde otomatik olarak devreye girer; çoklu sınıf (multiclass) eklenebilir.
+- **Türkçe arayüz**: genel arayüz ve 18 beceri ismi (Animal Handling → Hayvan İdaresi gibi) Türkçe; sınıf isimleri ve yetenek puanı kısaltmaları (STR/DEX/...) İngilizce bırakıldı.
+- **Dışa/içe aktarma**: her karakter JSON olarak indirilebilir ve başka bir tarayıcıya aktarılabilir.
+
+## Başlarken
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) adresini aç.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build   # production build
+npm run lint    # eslint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Teknoloji
 
-## Learn More
+Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui (Radix) · localStorage
 
-To learn more about Next.js, take a look at the following resources:
+Oyun verisi [5e-bits/5e-database](https://github.com/5e-bits/5e-database) (MIT lisanslı) üzerinden alınmıştır — Wizards of the Coast'un OGL/ORC ile yayınladığı Systems Reference Document (SRD) 5.1 ve 5.2 içeriğinin yapılandırılmış JSON hali. Bu proje bir SRD türevidir; resmi D&D Beyond veya Wizards of the Coast ürünü değildir.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Geliştirici/AI ajan notları için [AGENTS.md](./AGENTS.md) dosyasına bakabilirsin — özellikle 2014 ve 2024 SRD veri şemaları arasındaki farklar ve mimari kararlar orada belgelendi.
