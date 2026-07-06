@@ -44,3 +44,10 @@ export function spellDamageText(spell: SrdSpell, characterLevel: number): string
   if (!dice) return null;
   return damage.damage_type ? `${dice} ${damage.damage_type.name}` : dice;
 }
+
+/** Healing dice for a spell at its base slot level; "MOD" in the SRD text is a literal placeholder for the caster's spellcasting ability modifier (the surrounding "+" is already part of the template). */
+export function spellHealText(spell: SrdSpell, abilityMod: number): string | null {
+  const dice = spell.heal_at_slot_level?.[String(spell.level)];
+  if (!dice) return null;
+  return dice.replace("MOD", String(abilityMod));
+}

@@ -267,6 +267,7 @@ export interface SrdSpell extends SrdRef {
     damage_at_character_level?: Record<string, string>;
   };
   dc?: { dc_type: SrdRef; dc_success: string };
+  heal_at_slot_level?: Record<string, string>;
   school: SrdRef;
   classes: SrdRef[];
   subclasses: SrdRef[];

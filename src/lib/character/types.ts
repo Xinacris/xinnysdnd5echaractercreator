@@ -84,6 +84,10 @@ export interface Character {
   hitDiceUsed: number;
   /** Uses of a class's non-spell per-long-rest resource (e.g. Barbarian Rage) spent since the last long rest. */
   rageUsed?: number;
+  /** Hit points spent from the Paladin's Lay on Hands pool since the last long rest. */
+  layOnHandsUsed?: number;
+  /** Uses of Druid Wild Shape spent since the last short or long rest. */
+  wildShapeUsed?: number;
   inventory: InventoryItem[];
   currency: Currency;
   spellcasting: SpellcastingState;

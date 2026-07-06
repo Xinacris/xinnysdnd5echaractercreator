@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useSrdData } from "@/hooks/use-srd-data";
-import { getClassLevel, getClasses, getEquipment, getRaces, getSpellsForClass } from "@/lib/srd/loader";
+import { getClassLevel, getClasses, getEquipment, getFeatures, getRaces, getSpellsForClass } from "@/lib/srd/loader";
 import { resolveEquippedArmor } from "@/lib/character/armor";
 import { isWeapon, weaponAbilityModifier } from "@/lib/srd/equipment-adapter";
-import { spellDamageText } from "@/lib/srd/text";
+import { featureDescription, spellDamageText, spellHealText } from "@/lib/srd/text";
+import { InfoTooltip } from "@/components/info-tooltip";
 import {
   abilityModifier,
   computeArmorClass,
@@ -27,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Flame, Heart, Moon, Shield, Sun, Swords } from "lucide-react";
+import { Flame, HandHeart, Heart, Moon, PawPrint, Shield, Sun, Swords } from "lucide-react";
 
 export function CombatPanel({
   character,
@@ -52,7 +53,10 @@ export function CombatPanel({
     .map((i) => equipment?.find((e) => e.index === i.equipmentIndex))
     .filter((e): e is SrdEquipment => e !== undefined && isWeapon(e));
 
+  const allFeatures = useSrdData(() => getFeatures(character.edition), [character.edition]);
+
   const primaryClassIndex = character.classes[0]?.classIndex;
+  const primaryClassLevel = character.classes[0]?.level ?? 1;
   const selectedClass = classes?.find((c) => c.index === primaryClassIndex);
   const classSpells = useSrdData(
     () => (primaryClassIndex ? getSpellsForClass(character.edition, primaryClassIndex, 9) : Promise.resolve([])),
@@ -63,6 +67,39 @@ export function CombatPanel({
   const knownSpells = (classSpells ?? [])
     .filter((s) => character.spellcasting.known.includes(s.index))
     .sort((a, b) => a.level - b.level);
+
+  const primaryClassLevelData = useSrdData(
+    () =>
+      primaryClassIndex ? getClassLevel(character.edition, primaryClassIndex, primaryClassLevel) : Promise.resolve(undefined),
+    [character.edition, primaryClassIndex, primaryClassLevel]
+  );
+  const spellSlotLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    .map((lvl) => ({
+      level: lvl,
+      total: (primaryClassLevelData?.spellcasting?.[`spell_slots_level_${lvl}`] as number | undefined) ?? 0,
+    }))
+    .filter((s) => s.total > 0);
+
+  function toggleSlotUsed(level: number, slotIdx: number) {
+    const used = character.spellcasting.slotsUsed[level] ?? 0;
+    const isUsed = slotIdx < used;
+    const nextUsed = isUsed ? used - 1 : used + 1;
+    onUpdate({
+      spellcasting: { ...character.spellcasting, slotsUsed: { ...character.spellcasting.slotsUsed, [level]: nextUsed } },
+    });
+  }
+
+  // Divine Smite spends a spell slot (any level, tracked above) rather than its own resource — the damage
+  // scaling (2d8 base, +1d8 per slot level above 1st, capped at 5d8, +1d8 vs undead/fiends) is a fixed 5e
+  // rule not exposed as structured SRD data.
+  const paladinLevelForSmite = character.classes.find((c) => c.classIndex === "paladin")?.level;
+  const divineSmiteFeature = (allFeatures ?? []).find(
+    (f) => f.class.index === "paladin" && /divine smite|paladin's smite/i.test(f.name)
+  );
+  const hasDivineSmite =
+    paladinLevelForSmite !== undefined &&
+    divineSmiteFeature !== undefined &&
+    paladinLevelForSmite >= 2;
 
   const hitDiceByClass = (classes ?? []).map((c) => ({ classIndex: c.index, hitDie: c.hit_die }));
   const maxHp = maxHitPoints(character, hitDiceByClass, conMod);
@@ -99,6 +136,32 @@ export function CombatPanel({
     onUpdate((prev) => ({ rageUsed: (prev.rageUsed ?? 0) + 1 }));
   }
 
+  // Lay on Hands pool size (paladin level x 5) is a fixed 5e rule, not something the SRD data exposes as a number.
+  const paladinEntry = character.classes.find((c) => c.classIndex === "paladin");
+  const layOnHandsPool = paladinEntry ? paladinEntry.level * 5 : undefined;
+  const layOnHandsUsed = character.layOnHandsUsed ?? 0;
+  const layOnHandsRemaining =
+    layOnHandsPool !== undefined ? Math.max(0, layOnHandsPool - layOnHandsUsed) : undefined;
+  const [layOnHandsSpend, setLayOnHandsSpend] = useState(1);
+
+  function spendLayOnHands(amount: number) {
+    if (layOnHandsPool === undefined || amount <= 0) return;
+    onUpdate((prev) => ({
+      layOnHandsUsed: Math.min(layOnHandsPool, (prev.layOnHandsUsed ?? 0) + amount),
+    }));
+  }
+
+  // Wild Shape's use count doesn't scale with level in the SRD data (both editions state "twice" in prose);
+  // higher-level bonus uses described in 2024 text aren't exposed as a number, so this stays fixed at the base 2.
+  const druidEntry = character.classes.find((c) => c.classIndex === "druid");
+  const wildShapeTotal = druidEntry && druidEntry.level >= 2 ? 2 : undefined;
+  const wildShapeUsed = character.wildShapeUsed ?? 0;
+  const wildShapeRemaining = wildShapeTotal !== undefined ? Math.max(0, wildShapeTotal - wildShapeUsed) : undefined;
+
+  function spendWildShape() {
+    onUpdate((prev) => ({ wildShapeUsed: (prev.wildShapeUsed ?? 0) + 1 }));
+  }
+
   function applyDamage(amount: number) {
     let temp = character.temporaryHitPoints;
     let current = character.currentHitPoints;
@@ -133,6 +196,8 @@ export function CombatPanel({
       temporaryHitPoints: 0,
       hitDiceUsed: Math.max(0, prev.hitDiceUsed - diceToRestore),
       rageUsed: 0,
+      layOnHandsUsed: 0,
+      wildShapeUsed: 0,
       deathSaves: { successes: 0, failures: 0 },
       exhaustionLevel: character.edition === "2024" ? Math.max(0, prev.exhaustionLevel - 1) : prev.exhaustionLevel,
       spellcasting: { ...prev.spellcasting, slotsUsed: {} },
@@ -140,12 +205,12 @@ export function CombatPanel({
   }
 
   function shortRest() {
-    onUpdate({ deathSaves: { successes: 0, failures: 0 } });
+    onUpdate({ deathSaves: { successes: 0, failures: 0 }, wildShapeUsed: 0 });
   }
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {(equippedWeapons.length > 0 || knownSpells.length > 0) && (
+      {(equippedWeapons.length > 0 || knownSpells.length > 0 || spellSlotLevels.length > 0 || hasDivineSmite) && (
         <Card className="md:col-span-2 xl:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -153,6 +218,43 @@ export function CombatPanel({
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
+            {spellSlotLevels.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                {spellSlotLevels.map(({ level, total }) => {
+                  const used = character.spellcasting.slotsUsed[level] ?? 0;
+                  return (
+                    <div key={level} className="flex items-center gap-2 text-sm">
+                      <span className="w-16 text-xs text-muted-foreground">Sv. {level} Yuva</span>
+                      <div className="flex gap-1">
+                        {Array.from({ length: total }).map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => toggleSlotUsed(level, i)}
+                            className={`h-5 w-5 rounded-full border ${
+                              i < used ? "border-border bg-muted-foreground/40" : "border-primary"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                <Separator className="my-1" />
+              </div>
+            )}
+            {hasDivineSmite && (
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+                <span className="font-medium">
+                  <InfoTooltip description={featureDescription(divineSmiteFeature!)}>
+                    Kutsal Vuruş (Divine Smite)
+                  </InfoTooltip>
+                </span>
+                <span className="text-muted-foreground">
+                  Hasar 2d8 (Sv.1) · 3d8 (Sv.2) · 4d8 (Sv.3) · 5d8 (Sv.4+) Radiant (+1d8 Undead/İblis)
+                </span>
+              </div>
+            )}
+            {hasDivineSmite && (equippedWeapons.length > 0 || knownSpells.length > 0) && <Separator className="my-1" />}
             {equippedWeapons.map((w) => {
               const abilityMod = weaponAbilityModifier(w, strMod, dexMod);
               const attackBonus = abilityMod + profBonus;
@@ -173,14 +275,17 @@ export function CombatPanel({
             {equippedWeapons.length > 0 && knownSpells.length > 0 && <Separator className="my-1" />}
             {knownSpells.map((s) => {
               const damageText = spellDamageText(s, totalCharacterLevel(character));
+              const healText = spellHealText(s, spellAbilityMod);
               const parts: string[] = [];
               if (s.attack_type) parts.push(`Vuruş ${formatModifier(spellAttackBonus(profBonus, spellAbilityMod))}`);
               if (s.dc) parts.push(`KZ ${spellSaveDc(profBonus, spellAbilityMod)} (${s.dc.dc_type.name})`);
               if (damageText) parts.push(`Hasar ${damageText}`);
+              if (healText) parts.push(`İyileştirme ${healText}`);
               return (
                 <div key={s.index} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">
-                    {s.name} <span className="text-xs text-muted-foreground">({s.level === 0 ? "Kantrip" : `Sv. ${s.level}`})</span>
+                    <InfoTooltip description={[...s.desc, ...(s.higher_level ?? [])].join(" ")}>{s.name}</InfoTooltip>{" "}
+                    <span className="text-xs text-muted-foreground">({s.level === 0 ? "Kantrip" : `Sv. ${s.level}`})</span>
                   </span>
                   <span className="text-muted-foreground">{parts.join(" · ")}</span>
                 </div>
@@ -298,6 +403,58 @@ export function CombatPanel({
               1 Öfke Harca
             </Button>
             <p className="text-xs text-muted-foreground">Uzun dinlenmede sıfırlanır.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {layOnHandsPool !== undefined && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <HandHeart className="h-4 w-4" /> El Değmesi (Lay on Hands)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p className="text-sm">
+              Kalan: {layOnHandsRemaining} / {layOnHandsPool}
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={1}
+                value={layOnHandsSpend}
+                onChange={(e) => setLayOnHandsSpend(Number(e.target.value) || 0)}
+                className="h-8 w-16"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => spendLayOnHands(layOnHandsSpend)}
+                disabled={layOnHandsRemaining === 0}
+              >
+                Harca
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Uzun dinlenmede sıfırlanır.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {wildShapeTotal !== undefined && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <PawPrint className="h-4 w-4" /> Yaban Formu (Wild Shape)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <p className="text-sm">
+              Kalan: {wildShapeRemaining} / {wildShapeTotal}
+            </p>
+            <Button size="sm" variant="outline" onClick={spendWildShape} disabled={wildShapeRemaining === 0}>
+              1 Kullan
+            </Button>
+            <p className="text-xs text-muted-foreground">Kısa ya da uzun dinlenmede sıfırlanır.</p>
           </CardContent>
         </Card>
       )}

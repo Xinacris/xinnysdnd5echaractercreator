@@ -29,6 +29,8 @@ export function createBlankCharacter(edition: SrdEdition = "2024"): Character {
     temporaryHitPoints: 0,
     hitDiceUsed: 0,
     rageUsed: 0,
+    layOnHandsUsed: 0,
+    wildShapeUsed: 0,
     inventory: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
     spellcasting: { known: [], prepared: [], slotsUsed: {} },
