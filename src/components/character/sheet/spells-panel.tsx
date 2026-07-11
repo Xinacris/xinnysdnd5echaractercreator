@@ -32,7 +32,7 @@ export function SpellsPanel({
   character: Character;
   onUpdate: (patch: Partial<Character>) => void;
 }) {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const classIndex = character.classes[0]?.classIndex;
   const classLevel = character.classes[0]?.level ?? 1;
   const [open, setOpen] = useState(false);
@@ -59,11 +59,15 @@ export function SpellsPanel({
   const cantrips = knownSpellObjs.filter((s) => s.level === 0);
   const leveled = knownSpellObjs.filter((s) => s.level > 0).sort((a, b) => a.level - b.level);
 
-  if (!classIndex) return <p className="text-sm text-muted-foreground">Bu karakterin sınıfı yok.</p>;
+  if (!classIndex) return <p className="text-sm text-muted-foreground">{t("This character has no class.", "Bu karakterin sınıfı yok.")}</p>;
   if (!selectedClass) return <Skeleton className="h-40 w-full" />;
 
   if (!selectedClass.spellcasting) {
-    return <p className="text-sm text-muted-foreground">{selectedClass.name} büyü kullanamaz.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {selectedClass.name} {t("cannot cast spells.", "büyü kullanamaz.")}
+      </p>
+    );
   }
 
   const spellcastingAbility = selectedClass.spellcasting.spellcasting_ability.index as AbilityKey;
@@ -106,26 +110,26 @@ export function SpellsPanel({
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Büyü Yetkinliği</CardTitle>
+          <CardTitle className="text-base">{t("Spellcasting", "Büyü Yetkinliği")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Badge variant="secondary">Yetkinlik: {selectedClass.spellcasting.spellcasting_ability.name}</Badge>
-          <Badge variant="secondary">Büyü DC: {spellSaveDc(profBonus, abilityMod)}</Badge>
-          <Badge variant="secondary">Büyü Atak Bonusu: +{spellAttackBonus(profBonus, abilityMod)}</Badge>
+          <Badge variant="secondary">{t("Ability", "Yetkinlik")}: {selectedClass.spellcasting.spellcasting_ability.name}</Badge>
+          <Badge variant="secondary">{t("Spell DC", "Büyü DC")}: {spellSaveDc(profBonus, abilityMod)}</Badge>
+          <Badge variant="secondary">{t("Spell Attack Bonus", "Büyü Atak Bonusu")}: +{spellAttackBonus(profBonus, abilityMod)}</Badge>
         </CardContent>
       </Card>
 
       {slotLevels.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Büyü Yuvaları</CardTitle>
+            <CardTitle className="text-base">{t("Spell Slots", "Büyü Yuvaları")}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             {slotLevels.map(({ level, total }) => {
               const used = character.spellcasting.slotsUsed[level] ?? 0;
               return (
                 <div key={level} className="flex items-center gap-2 text-sm">
-                  <span className="w-16">Seviye {level}</span>
+                  <span className="w-16">{t("Level", "Seviye")} {level}</span>
                   <div className="flex gap-1">
                     {Array.from({ length: total }).map((_, i) => (
                       <button
@@ -146,18 +150,18 @@ export function SpellsPanel({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Bilinen Büyüler</CardTitle>
+          <CardTitle className="text-base">{t("Known Spells", "Bilinen Büyüler")}</CardTitle>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button size="sm">
-                <Plus className="h-4 w-4" /> Büyü Ekle
+                <Plus className="h-4 w-4" /> {t("Add Spell", "Büyü Ekle")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0" align="end">
               <Command>
-                <CommandInput placeholder="Büyü ara..." />
+                <CommandInput placeholder={t("Search spells...", "Büyü ara...")} />
                 <CommandList>
-                  <CommandEmpty>Bulunamadı.</CommandEmpty>
+                  <CommandEmpty>{t("Not found.", "Bulunamadı.")}</CommandEmpty>
                   <CommandGroup>
                     {addableSpells
                       .filter((s) => !character.spellcasting.known.includes(s.index))
@@ -170,7 +174,7 @@ export function SpellsPanel({
                             </InfoTooltip>
                           </span>
                           <Badge variant="outline" className="ml-auto text-[10px]">
-                            {s.level === 0 ? "Kantrip" : `Sv. ${s.level}`}
+                            {s.level === 0 ? t("Cantrip", "Kantrip") : `${t("Lvl.", "Sv.")} ${s.level}`}
                           </Badge>
                         </CommandItem>
                       ))}
@@ -182,7 +186,7 @@ export function SpellsPanel({
         </CardHeader>
         <CardContent>
           {cantrips.length === 0 && leveled.length === 0 && (
-            <p className="text-sm text-muted-foreground">Henüz büyü seçilmedi.</p>
+            <p className="text-sm text-muted-foreground">{t("No spells selected yet.", "Henüz büyü seçilmedi.")}</p>
           )}
           <Accordion type="multiple">
             {[...cantrips, ...leveled].map((spell) => (
@@ -191,14 +195,14 @@ export function SpellsPanel({
                   <span className="flex flex-1 items-center gap-2">
                     {spell.name}
                     <Badge variant="outline" className="text-[10px]">
-                      {spell.level === 0 ? "Kantrip" : `Sv. ${spell.level}`}
+                      {spell.level === 0 ? t("Cantrip", "Kantrip") : `${t("Lvl.", "Sv.")} ${spell.level}`}
                     </Badge>
                   </span>
                 </AccordionTrigger>
                 <AccordionContent className="flex flex-col gap-2 text-sm text-muted-foreground">
                   <p>{localizedSpellDescription(spell, language)}</p>
                   <p className="text-xs">
-                    Menzil: {spell.range} · Süre: {spell.duration} · Zamanlama: {spell.casting_time}
+                    {t("Range", "Menzil")}: {spell.range} · {t("Duration", "Süre")}: {spell.duration} · {t("Casting Time", "Zamanlama")}: {spell.casting_time}
                   </p>
                   <Button
                     size="sm"
@@ -206,7 +210,7 @@ export function SpellsPanel({
                     className="w-fit text-destructive"
                     onClick={() => removeSpell(spell.index)}
                   >
-                    <X className="h-4 w-4" /> Kaldır
+                    <X className="h-4 w-4" /> {t("Remove", "Kaldır")}
                   </Button>
                 </AccordionContent>
               </AccordionItem>

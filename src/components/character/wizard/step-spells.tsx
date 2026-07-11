@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 export function StepSpells() {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const { draft, update } = useWizard();
   const classIndex = draft.classes[0]?.classIndex;
 
@@ -34,13 +34,17 @@ export function StepSpells() {
   const cantrips = useMemo(() => (classSpells ?? []).filter((s) => s.level === 0), [classSpells]);
   const leveledSpells = useMemo(() => (classSpells ?? []).filter((s) => s.level === 1), [classSpells]);
 
-  if (!classIndex) return <p className="text-sm text-muted-foreground">Önce bir sınıf seçmelisin.</p>;
+  if (!classIndex)
+    return <p className="text-sm text-muted-foreground">{t("Select a class first.", "Önce bir sınıf seçmelisin.")}</p>;
   if (!selectedClass || !level1 || !classSpells) return <Skeleton className="h-40 w-full" />;
 
   if (!selectedClass.spellcasting || selectedClass.spellcasting.level > 1) {
     return (
       <p className="text-sm text-muted-foreground">
-        {selectedClass.name} 1. seviyede büyü kullanamaz. Bu adımı atlayabilirsin.
+        {t(
+          `${selectedClass.name} cannot cast spells at level 1. You can skip this step.`,
+          `${selectedClass.name} 1. seviyede büyü kullanamaz. Bu adımı atlayabilirsin.`
+        )}
       </p>
     );
   }
@@ -83,13 +87,19 @@ export function StepSpells() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap gap-2">
-        <Badge variant="secondary">Büyü Yetkinliği: {selectedClass.spellcasting.spellcasting_ability.name}</Badge>
-        <Badge variant="secondary">1. Seviye Büyü Yuvası: {level1.spellcasting?.spell_slots_level_1 ?? 0}</Badge>
+        <Badge variant="secondary">
+          {t("Spellcasting Ability", "Büyü Yetkinliği")}: {selectedClass.spellcasting.spellcasting_ability.name}
+        </Badge>
+        <Badge variant="secondary">
+          {t("Level 1 Spell Slots", "1. Seviye Büyü Yuvası")}: {level1.spellcasting?.spell_slots_level_1 ?? 0}
+        </Badge>
       </div>
 
       {cantripsKnown > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Kantrip Seç ({currentCantrips.length} / {cantripsKnown})</Label>
+          <Label>
+            {t("Choose Cantrips", "Kantrip Seç")} ({currentCantrips.length} / {cantripsKnown})
+          </Label>
           <ReferenceChoicePicker
             options={cantrips.map((s) => ({ index: s.index, label: s.name, description: localizedSpellDescription(s, language) }))}
             choose={cantripsKnown}
@@ -102,7 +112,8 @@ export function StepSpells() {
       {knownCount > 0 && (
         <div className="flex flex-col gap-2">
           <Label>
-            {classIndex === "wizard" ? "Büyü Kitabı" : "Hazırlanan Büyüler"} ({currentLeveled.length} / {knownCount})
+            {classIndex === "wizard" ? t("Spellbook", "Büyü Kitabı") : t("Prepared Spells", "Hazırlanan Büyüler")} (
+            {currentLeveled.length} / {knownCount})
           </Label>
           <ReferenceChoicePicker
             options={leveledSpells.map((s) => ({ index: s.index, label: s.name, description: localizedSpellDescription(s, language) }))}

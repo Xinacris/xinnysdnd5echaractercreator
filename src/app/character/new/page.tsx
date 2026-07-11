@@ -14,20 +14,23 @@ import { StepSummary } from "@/components/character/wizard/step-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-const STEPS = [
-  { title: "Temel Bilgiler", Component: StepBasics },
-  { title: "Irk", Component: StepRace },
-  { title: "Sınıf", Component: StepClass },
-  { title: "Yetenek Puanları", Component: StepAbilities },
-  { title: "Beceriler", Component: StepSkills },
-  { title: "Ekipman", Component: StepEquipment },
-  { title: "Büyüler", Component: StepSpells },
-  { title: "Özet", Component: StepSummary },
-];
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
 export default function NewCharacterPage() {
   const [step, setStep] = useState(0);
+  const { t } = useContentLanguage();
+
+  const STEPS = [
+    { title: t("Basics", "Temel Bilgiler"), Component: StepBasics },
+    { title: t("Race", "Irk"), Component: StepRace },
+    { title: t("Class", "Sınıf"), Component: StepClass },
+    { title: t("Ability Scores", "Yetenek Puanları"), Component: StepAbilities },
+    { title: t("Skills", "Beceriler"), Component: StepSkills },
+    { title: t("Equipment", "Ekipman"), Component: StepEquipment },
+    { title: t("Spells", "Büyüler"), Component: StepSpells },
+    { title: t("Summary", "Özet"), Component: StepSummary },
+  ];
+
   const { title, Component } = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
@@ -65,11 +68,11 @@ export default function NewCharacterPage() {
         <div className="mt-6 flex justify-between">
           <Button variant="outline" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
             <ChevronLeft className="h-4 w-4" />
-            Geri
+            {t("Back", "Geri")}
           </Button>
           {!isLast && (
             <Button onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}>
-              İleri
+              {t("Next", "İleri")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           )}

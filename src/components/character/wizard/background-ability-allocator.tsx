@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { AbilityKey } from "@/lib/i18n/abilities";
-import { ABILITY_ABBR, ABILITY_FULL_TR } from "@/lib/i18n/abilities";
+import { ABILITY_ABBR, abilityFullName } from "@/lib/i18n/abilities";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import type { SrdRef } from "@/lib/srd/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ export function BackgroundAbilityAllocator({
   value: Partial<Record<AbilityKey, number>>;
   onChange: (value: Partial<Record<AbilityKey, number>>) => void;
 }) {
+  const { t, language } = useContentLanguage();
   const keys = options.map((o) => o.index as AbilityKey);
   const [pattern, setPattern] = useState<Pattern>(
     Object.values(value).includes(2) ? "2-1" : "1-1-1"
@@ -63,13 +65,13 @@ export function BackgroundAbilityAllocator({
         <div className="flex items-center gap-2">
           <RadioGroupItem value="2-1" id="pattern-2-1" />
           <Label htmlFor="pattern-2-1" className="font-normal">
-            Birine +2, başka birine +1
+            {t("+2 to one, +1 to another", "Birine +2, başka birine +1")}
           </Label>
         </div>
         <div className="flex items-center gap-2">
           <RadioGroupItem value="1-1-1" id="pattern-1-1-1" />
           <Label htmlFor="pattern-1-1-1" className="font-normal">
-            Üçüne de +1
+            {t("+1 to all three", "Üçüne de +1")}
           </Label>
         </div>
       </RadioGroup>
@@ -77,7 +79,7 @@ export function BackgroundAbilityAllocator({
       {pattern === "2-1" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <Label className="whitespace-nowrap">+2 alacak özellik:</Label>
+            <Label className="whitespace-nowrap">{t("Ability to get +2:", "+2 alacak özellik:")}</Label>
             <Select value={plusTwo} onValueChange={(v) => handlePlusTwoChange(v as AbilityKey)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -85,14 +87,14 @@ export function BackgroundAbilityAllocator({
               <SelectContent>
                 {keys.map((k) => (
                   <SelectItem key={k} value={k}>
-                    {ABILITY_ABBR[k]} ({ABILITY_FULL_TR[k]})
+                    {ABILITY_ABBR[k]} ({abilityFullName(k, language)})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <Label className="whitespace-nowrap">+1 alacak özellik:</Label>
+            <Label className="whitespace-nowrap">{t("Ability to get +1:", "+1 alacak özellik:")}</Label>
             <Select value={plusOne} onValueChange={(v) => applyPattern("2-1", plusTwo, v as AbilityKey)}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -102,7 +104,7 @@ export function BackgroundAbilityAllocator({
                   .filter((k) => k !== plusTwo)
                   .map((k) => (
                     <SelectItem key={k} value={k}>
-                      {ABILITY_ABBR[k]} ({ABILITY_FULL_TR[k]})
+                      {ABILITY_ABBR[k]} ({abilityFullName(k, language)})
                     </SelectItem>
                   ))}
               </SelectContent>

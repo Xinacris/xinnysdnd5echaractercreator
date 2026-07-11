@@ -5,9 +5,11 @@ import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getCharacterRepository, importCharacterFromJson } from "@/lib/character/storage";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
 export function ImportCharacterButton({ onImported }: { onImported: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useContentLanguage();
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -18,9 +20,14 @@ export function ImportCharacterButton({ onImported }: { onImported: () => void }
       const character = importCharacterFromJson(text);
       await getCharacterRepository().save(character);
       onImported();
-      toast.success(`"${character.name}" içe aktarıldı`);
+      toast.success(`"${character.name}" ${t("imported", "içe aktarıldı")}`);
     } catch {
-      toast.error("Karakter dosyası okunamadı. Geçerli bir JSON dosyası seçin.");
+      toast.error(
+        t(
+          "Could not read the character file. Select a valid JSON file.",
+          "Karakter dosyası okunamadı. Geçerli bir JSON dosyası seçin."
+        )
+      );
     }
   }
 
@@ -29,7 +36,7 @@ export function ImportCharacterButton({ onImported }: { onImported: () => void }
       <input ref={inputRef} type="file" accept="application/json" className="hidden" onChange={handleFile} />
       <Button variant="outline" onClick={() => inputRef.current?.click()}>
         <Upload className="h-4 w-4" />
-        İçe Aktar
+        {t("Import", "İçe Aktar")}
       </Button>
     </>
   );

@@ -13,6 +13,7 @@ import { abilityModifier, maxHitPoints, totalCharacterLevel, totalHitDice } from
 import { featureLevel } from "@/lib/srd/text";
 import { categorizeProficiencyIndex } from "@/lib/character/proficiency-utils";
 import { translateSkill } from "@/lib/i18n/skills";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import type { Character, CharacterClassLevel } from "@/lib/character/types";
 import {
   Dialog,
@@ -44,6 +45,7 @@ export function LevelUpDialog({
   onOpenChange: (open: boolean) => void;
   onConfirm: (patch: Partial<Character>) => void;
 }) {
+  const { t, language } = useContentLanguage();
   const classes = useSrdData(() => getClasses(character.edition), [character.edition]);
   const allFeatures = useSrdData(() => getFeatures(character.edition), [character.edition]);
 
@@ -189,13 +191,15 @@ export function LevelUpDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Seviye Atla</DialogTitle>
-          <DialogDescription>Şu anki toplam seviye: {totalCharacterLevel(character)}</DialogDescription>
+          <DialogTitle>{t("Level Up", "Seviye Atla")}</DialogTitle>
+          <DialogDescription>
+            {t("Current total level", "Şu anki toplam seviye")}: {totalCharacterLevel(character)}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Hangi sınıf seviye atlayacak?</Label>
+            <Label>{t("Which class levels up?", "Hangi sınıf seviye atlayacak?")}</Label>
             <div className="flex flex-wrap gap-2">
               {character.classes.map((c) => (
                 <Button
@@ -215,13 +219,13 @@ export function LevelUpDialog({
                 variant={addingNewClass ? "default" : "outline"}
                 onClick={() => setAddingNewClass(true)}
               >
-                + Yeni Sınıf (Multiclass)
+                + {t("New Class (Multiclass)", "Yeni Sınıf (Multiclass)")}
               </Button>
             </div>
             {addingNewClass && (
               <Select value={chosenClassIndex} onValueChange={setChosenClassIndex}>
                 <SelectTrigger className="w-full sm:w-64">
-                  <SelectValue placeholder="Sınıf seç" />
+                  <SelectValue placeholder={t("Choose a class", "Sınıf seç")} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableClasses.map((c) => (
@@ -236,7 +240,7 @@ export function LevelUpDialog({
 
           {multiclassChoices.length > 0 && (
             <div className="flex flex-col gap-3">
-              <Label>{selectedClass?.name} Çoklu Sınıf Yetkinlikleri</Label>
+              <Label>{t(`${selectedClass?.name} Multiclass Proficiencies`, `${selectedClass?.name} Çoklu Sınıf Yetkinlikleri`)}</Label>
               {multiclassChoices.map((choice, i) => {
                 const key = `mc-${i}`;
                 const options = (choice.from.options ?? []).map((opt) => {
@@ -244,7 +248,7 @@ export function LevelUpDialog({
                   const { category, cleanIndex } = categorizeProficiencyIndex(o.item.index);
                   const label =
                     category === "skill"
-                      ? translateSkill(cleanIndex, o.item.name.replace(/^Skill: /, ""))
+                      ? translateSkill(cleanIndex, o.item.name.replace(/^Skill: /, ""), language)
                       : o.item.name.replace(/^(Tool|Skill): /, "");
                   return { index: o.item.index, label };
                 });
@@ -263,14 +267,14 @@ export function LevelUpDialog({
 
           {chosenClassIndex && (
             <div className="flex flex-col gap-2">
-              <Label>Can Puanı Artışı (d{hitDie})</Label>
+              <Label>{t("Hit Point Increase", "Can Puanı Artışı")} (d{hitDie})</Label>
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   variant={hpMethod === "average" ? "default" : "outline"}
                   onClick={() => setHpMethod("average")}
                 >
-                  Ortalama ({averageHp(hitDie)})
+                  {t("Average", "Ortalama")} ({averageHp(hitDie)})
                 </Button>
                 <Button
                   size="sm"
@@ -280,7 +284,7 @@ export function LevelUpDialog({
                     rollHp();
                   }}
                 >
-                  Zar At {hpMethod === "roll" && rolledHp !== null ? `(${rolledHp})` : ""}
+                  {t("Roll", "Zar At")} {hpMethod === "roll" && rolledHp !== null ? `(${rolledHp})` : ""}
                 </Button>
               </div>
             </div>
@@ -288,10 +292,10 @@ export function LevelUpDialog({
 
           {needsSubclassChoice && (
             <div className="flex flex-col gap-2">
-              <Label>Alt Sınıf Seç</Label>
+              <Label>{t("Choose Subclass", "Alt Sınıf Seç")}</Label>
               <Select value={subclassIndex} onValueChange={setSubclassIndex}>
                 <SelectTrigger className="w-full sm:w-64">
-                  <SelectValue placeholder="Alt sınıf seç" />
+                  <SelectValue placeholder={t("Choose a subclass", "Alt sınıf seç")} />
                 </SelectTrigger>
                 <SelectContent>
                   {subclassesForClass!.map((s) => (
@@ -306,7 +310,7 @@ export function LevelUpDialog({
 
           {isAsiLevel && (
             <div className="flex flex-col gap-2">
-              <Label>Yetenek Puanı Artışı (2 puan dağıt)</Label>
+              <Label>{t("Ability Score Improvement (distribute 2 points)", "Yetenek Puanı Artışı (2 puan dağıt)")}</Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {ABILITY_KEYS.map((key) => (
                   <div key={key} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
@@ -324,17 +328,19 @@ export function LevelUpDialog({
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">{asiPointsUsed} / 2 puan kullanıldı</p>
+              <p className="text-xs text-muted-foreground">
+                {asiPointsUsed} / 2 {t("points used", "puan kullanıldı")}
+              </p>
             </div>
           )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Vazgeç
+            {t("Cancel", "Vazgeç")}
           </Button>
           <Button onClick={handleConfirm} disabled={!chosenClassIndex}>
-            Onayla
+            {t("Confirm", "Onayla")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -13,6 +13,15 @@ export const ABILITY_FULL_TR: Record<AbilityKey, string> = {
   cha: "Karizma",
 };
 
+export const ABILITY_FULL_EN: Record<AbilityKey, string> = {
+  str: "Strength",
+  dex: "Dexterity",
+  con: "Constitution",
+  int: "Intelligence",
+  wis: "Wisdom",
+  cha: "Charisma",
+};
+
 export const ABILITY_ABBR: Record<AbilityKey, string> = {
   str: "STR",
   dex: "DEX",
@@ -21,3 +30,7 @@ export const ABILITY_ABBR: Record<AbilityKey, string> = {
   wis: "WIS",
   cha: "CHA",
 };
+
+export function abilityFullName(key: AbilityKey, language: "en" | "tr"): string {
+  return language === "tr" ? ABILITY_FULL_TR[key] : ABILITY_FULL_EN[key];
+}

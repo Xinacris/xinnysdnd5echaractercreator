@@ -14,11 +14,13 @@ import { LevelUpDialog } from "@/components/character/sheet/level-up-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
 export default function CharacterSheetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { character, update } = useCharacter(id);
   const [levelUpOpen, setLevelUpOpen] = useState(false);
+  const { t } = useContentLanguage();
 
   if (character === undefined) {
     return (
@@ -36,9 +38,9 @@ export default function CharacterSheetPage({ params }: { params: Promise<{ id: s
   if (character === null) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-16 text-center">
-        <p className="text-lg font-medium">Karakter bulunamadı.</p>
+        <p className="text-lg font-medium">{t("Character not found.", "Karakter bulunamadı.")}</p>
         <Button asChild className="mt-4">
-          <Link href="/">Ana sayfaya dön</Link>
+          <Link href="/">{t("Back to home", "Ana sayfaya dön")}</Link>
         </Button>
       </div>
     );
@@ -52,11 +54,11 @@ export default function CharacterSheetPage({ params }: { params: Promise<{ id: s
 
       <Tabs defaultValue="genel" className="mt-6">
         <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="genel">Genel Bakış</TabsTrigger>
-          <TabsTrigger value="envanter">Envanter</TabsTrigger>
-          {isCaster && <TabsTrigger value="buyuler">Büyüler</TabsTrigger>}
-          <TabsTrigger value="ozellikler">Özellikler</TabsTrigger>
-          <TabsTrigger value="notlar">Notlar</TabsTrigger>
+          <TabsTrigger value="genel">{t("Overview", "Genel Bakış")}</TabsTrigger>
+          <TabsTrigger value="envanter">{t("Inventory", "Envanter")}</TabsTrigger>
+          {isCaster && <TabsTrigger value="buyuler">{t("Spells", "Büyüler")}</TabsTrigger>}
+          <TabsTrigger value="ozellikler">{t("Features", "Özellikler")}</TabsTrigger>
+          <TabsTrigger value="notlar">{t("Notes", "Notlar")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="genel" className="mt-4 flex flex-col gap-4">

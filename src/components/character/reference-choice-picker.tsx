@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
 export interface ChoiceOption {
   index: string;
@@ -22,6 +23,8 @@ export function ReferenceChoicePicker({
   value: string[];
   onChange: (indices: string[]) => void;
 }) {
+  const { t } = useContentLanguage();
+
   if (choose === 1) {
     return (
       <RadioGroup value={value[0] ?? ""} onValueChange={(v) => onChange([v])} className="gap-2">
@@ -49,7 +52,7 @@ export function ReferenceChoicePicker({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">
-        {value.length} / {choose} seçildi
+        {value.length} / {choose} {t("selected", "seçildi")}
       </p>
       {options.map((opt) => {
         const checked = value.includes(opt.index);

@@ -9,13 +9,16 @@ const STORAGE_KEY = "dnd-character-creator:content-language";
 const ContentLanguageContext = createContext<{
   language: ContentLanguage;
   setLanguage: (l: ContentLanguage) => void;
+  /** Picks between an English and a Turkish string based on the current toggle. */
+  t: (en: string, tr: string) => string;
 } | null>(null);
 
 /**
- * Global (not per-character) preference for which language SRD spell/feature/trait
- * descriptions render in. Defaults to English since only a subset of content has a
- * Turkish translation so far — callers fall back to English automatically when a
- * translation is missing, so this only needs to track what the user asked for.
+ * Global (not per-character) preference for which language the whole site renders in —
+ * both the SRD spell/feature/trait descriptions and all UI chrome (labels, buttons,
+ * dialogs, toasts). Defaults to English since only a subset of content has a Turkish
+ * translation so far — callers fall back to English automatically when a translation
+ * is missing, so this only needs to track what the user asked for.
  */
 export function ContentLanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<ContentLanguage>("en");
@@ -28,13 +31,23 @@ export function ContentLanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   function setLanguage(l: ContentLanguage) {
     setLanguageState(l);
     window.localStorage.setItem(STORAGE_KEY, l);
   }
 
+  function t(en: string, tr: string) {
+    return language === "tr" ? tr : en;
+  }
+
   return (
-    <ContentLanguageContext.Provider value={{ language, setLanguage }}>{children}</ContentLanguageContext.Provider>
+    <ContentLanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </ContentLanguageContext.Provider>
   );
 }
 

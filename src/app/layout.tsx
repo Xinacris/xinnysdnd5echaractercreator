@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "D&D Karakter Oluşturucu",
-  description: "D&D 5e ve 5.5e için karakter oluşturucu — karakterleriniz tarayıcınızda saklanır.",
+  title: "D&D Character Creator",
+  description: "Character creator for D&D 5e and 5.5e — your characters are stored in your browser.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="tr"
+      lang="en"
       className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">

@@ -7,6 +7,7 @@ import { normalizeBackground } from "@/lib/srd/background-adapter";
 import { isArmorOrShield, isWeapon } from "@/lib/srd/equipment-adapter";
 import type { SrdChoice } from "@/lib/srd/types";
 import { useWizard } from "./wizard-context";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import { EquipmentChoiceGroup, GOLD_SENTINEL_INDEX, type ResolvedEquipmentItem } from "../equipment-choice-picker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ interface ChoiceSource {
 
 export function StepEquipment() {
   const { draft, update } = useWizard();
+  const { t, language } = useContentLanguage();
   const classes = useSrdData(() => getClasses(draft.edition), [draft.edition]);
   const backgrounds = useSrdData(() => getBackgrounds(draft.edition), [draft.edition]);
   const equipment = useSrdData(() => getEquipment(draft.edition), [draft.edition]);
@@ -48,14 +50,22 @@ export function StepEquipment() {
   const choiceSources: ChoiceSource[] = useMemo(() => {
     const sources: ChoiceSource[] = [];
     (selectedClass?.starting_equipment_options ?? []).forEach((c, i) =>
-      sources.push({ key: `class-eq-${i}`, title: `${selectedClass?.name} Ekipmanı`, choice: c })
+      sources.push({
+        key: `class-eq-${i}`,
+        title: `${selectedClass?.name} ${t("Equipment", "Ekipmanı")}`,
+        choice: c,
+      })
     );
     (normalizedBg?.equipmentChoices ?? []).forEach((c, i) =>
-      sources.push({ key: `bg-eq-${i}`, title: `${normalizedBg?.name} Ekipmanı`, choice: c })
+      sources.push({
+        key: `bg-eq-${i}`,
+        title: `${normalizedBg?.name} ${t("Equipment", "Ekipmanı")}`,
+        choice: c,
+      })
     );
     return sources;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClass?.index, normalizedBg?.index]);
+  }, [selectedClass?.index, normalizedBg?.index, language]);
 
   useEffect(() => {
     const allChoiceItems = Object.values(resolvedBySource).flat();
@@ -94,7 +104,11 @@ export function StepEquipment() {
   }, [resolvedBySource, fixedItems, normalizedBg?.startingGold?.quantity, equipment]);
 
   if (!classIndex) {
-    return <p className="text-sm text-muted-foreground">Önce bir sınıf seçmelisin.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t("You need to select a class first.", "Önce bir sınıf seçmelisin.")}
+      </p>
+    );
   }
 
   return (
@@ -105,7 +119,7 @@ export function StepEquipment() {
         <>
           {fixedItems.length > 0 && (
             <div className="flex flex-col gap-2">
-              <Label>Otomatik Verilen Ekipman</Label>
+              <Label>{t("Automatically Granted Equipment", "Otomatik Verilen Ekipman")}</Label>
               <div className="flex flex-wrap gap-1.5">
                 {fixedItems.map((item, i) => (
                   <Badge key={`${item.index}-${i}`} variant="secondary">
@@ -119,7 +133,8 @@ export function StepEquipment() {
 
           {normalizedBg?.startingGold && (
             <p className="text-sm text-muted-foreground">
-              Geçmişten başlangıç altını: {normalizedBg.startingGold.quantity} {normalizedBg.startingGold.unit}
+              {t("Starting gold from background:", "Geçmişten başlangıç altını:")} {normalizedBg.startingGold.quantity}{" "}
+              {normalizedBg.startingGold.unit}
             </p>
           )}
 
@@ -140,7 +155,7 @@ export function StepEquipment() {
 
           <Card>
             <CardContent>
-              <Label className="mb-2 block">Envanter Önizlemesi</Label>
+              <Label className="mb-2 block">{t("Inventory Preview", "Envanter Önizlemesi")}</Label>
               <div className="flex flex-wrap gap-1.5">
                 {draft.inventory.map((item) => (
                   <Badge key={item.id} variant="outline">
@@ -149,7 +164,9 @@ export function StepEquipment() {
                   </Badge>
                 ))}
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">Altın: {draft.currency.gp} GP</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {t("Gold:", "Altın:")} {draft.currency.gp} GP
+              </p>
             </CardContent>
           </Card>
         </>

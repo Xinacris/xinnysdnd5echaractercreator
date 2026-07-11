@@ -4,15 +4,16 @@ import type { Character, CharacterNotes } from "@/lib/character/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
-const FIELDS: { key: keyof CharacterNotes; label: string }[] = [
-  { key: "personalityTraits", label: "Kişilik Özellikleri" },
-  { key: "ideals", label: "İdealler" },
-  { key: "bonds", label: "Bağlar" },
-  { key: "flaws", label: "Kusurlar" },
-  { key: "alliesAndOrganizations", label: "Müttefikler ve Organizasyonlar" },
-  { key: "additionalFeatures", label: "Ek Özellikler" },
-  { key: "backstory", label: "Geçmiş Hikaye" },
+const FIELDS: { key: keyof CharacterNotes; label: [string, string] }[] = [
+  { key: "personalityTraits", label: ["Personality Traits", "Kişilik Özellikleri"] },
+  { key: "ideals", label: ["Ideals", "İdealler"] },
+  { key: "bonds", label: ["Bonds", "Bağlar"] },
+  { key: "flaws", label: ["Flaws", "Kusurlar"] },
+  { key: "alliesAndOrganizations", label: ["Allies and Organizations", "Müttefikler ve Organizasyonlar"] },
+  { key: "additionalFeatures", label: ["Additional Features", "Ek Özellikler"] },
+  { key: "backstory", label: ["Backstory", "Geçmiş Hikaye"] },
 ];
 
 export function NotesPanel({
@@ -22,6 +23,8 @@ export function NotesPanel({
   character: Character;
   onUpdate: (patch: Partial<Character>) => void;
 }) {
+  const { t } = useContentLanguage();
+
   function setNote(key: keyof CharacterNotes, value: string) {
     onUpdate({ notes: { ...character.notes, [key]: value } });
   }
@@ -32,7 +35,7 @@ export function NotesPanel({
         <Card key={key} className={key === "backstory" ? "md:col-span-2" : undefined}>
           <CardHeader>
             <CardTitle className="text-base">
-              <Label>{label}</Label>
+              <Label>{t(label[0], label[1])}</Label>
             </CardTitle>
           </CardHeader>
           <CardContent>

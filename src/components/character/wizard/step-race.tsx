@@ -5,7 +5,7 @@ import { getRaces, getSubracesForRace, getTraits, subraceTraitRefs } from "@/lib
 import { useContentLanguage } from "@/lib/i18n/content-language";
 import { localizedTraitDescription } from "@/lib/i18n/content-descriptions";
 import type { AbilityKey } from "@/lib/i18n/abilities";
-import { ABILITY_ABBR, ABILITY_FULL_TR } from "@/lib/i18n/abilities";
+import { ABILITY_ABBR, abilityFullName } from "@/lib/i18n/abilities";
 import { slugToTitle } from "@/lib/slug";
 import { useWizard } from "./wizard-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { SrdTrait } from "@/lib/srd/types";
 
 export function StepRace() {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const { draft, update } = useWizard();
   const races = useSrdData(() => getRaces(draft.edition), [draft.edition]);
   const subraces = useSrdData(
@@ -40,7 +40,7 @@ export function StepRace() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label>Irk</Label>
+        <Label>{t("Race", "Irk")}</Label>
         {!races ? (
           <Skeleton className="h-9 w-full sm:w-80" />
         ) : (
@@ -51,7 +51,7 @@ export function StepRace() {
             }
           >
             <SelectTrigger className="w-full sm:w-80">
-              <SelectValue placeholder="Bir ırk seç" />
+              <SelectValue placeholder={t("Choose a race", "Bir ırk seç")} />
             </SelectTrigger>
             <SelectContent>
               {races.map((r) => (
@@ -66,10 +66,10 @@ export function StepRace() {
 
       {race && subraces && subraces.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Alt Irk</Label>
+          <Label>{t("Subrace", "Alt Irk")}</Label>
           <Select value={draft.subraceIndex ?? ""} onValueChange={(v) => update({ subraceIndex: v })}>
             <SelectTrigger className="w-full sm:w-80">
-              <SelectValue placeholder="Bir alt ırk seç" />
+              <SelectValue placeholder={t("Choose a subrace", "Bir alt ırk seç")} />
             </SelectTrigger>
             <SelectContent>
               {subraces.map((s) => (
@@ -84,8 +84,8 @@ export function StepRace() {
 
       {race && (
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">Hız: {race.speed} fit</Badge>
-          <Badge variant="secondary">Boyut: {race.size}</Badge>
+          <Badge variant="secondary">{t("Speed", "Hız")}: {race.speed} ft</Badge>
+          <Badge variant="secondary">{t("Size", "Boyut")}: {race.size}</Badge>
           {race.ability_bonuses?.map((b) => (
             <Badge key={b.ability_score.index}>
               {ABILITY_ABBR[b.ability_score.index as AbilityKey]} +{b.bonus}
@@ -93,7 +93,7 @@ export function StepRace() {
           ))}
           {subrace?.ability_bonuses?.map((b) => (
             <Badge key={b.ability_score.index}>
-              {ABILITY_ABBR[b.ability_score.index as AbilityKey]} +{b.bonus} (alt ırk)
+              {ABILITY_ABBR[b.ability_score.index as AbilityKey]} +{b.bonus} ({t("subrace", "alt ırk")})
             </Badge>
           ))}
         </div>
@@ -102,7 +102,8 @@ export function StepRace() {
       {race && bonusChoice && (
         <div className="flex flex-col gap-2">
           <Label>
-            Yetenek Puanı Bonusu Seç ({(draft.raceAbilityBonusChoices ?? []).length} / {bonusChoice.choose})
+            {t("Choose Ability Score Bonus", "Yetenek Puanı Bonusu Seç")} ({(draft.raceAbilityBonusChoices ?? []).length} /{" "}
+            {bonusChoice.choose})
           </Label>
           <div className="flex flex-wrap gap-3">
             {(bonusChoice.from.options as { ability_score: { index: string }; bonus: number }[]).map((opt) => {
@@ -125,7 +126,7 @@ export function StepRace() {
                       else update({ raceAbilityBonusChoices: selected.filter((k) => k !== key) });
                     }}
                   />
-                  {ABILITY_ABBR[key]} ({ABILITY_FULL_TR[key]}) +{opt.bonus}
+                  {ABILITY_ABBR[key]} ({abilityFullName(key, language)}) +{opt.bonus}
                 </label>
               );
             })}
@@ -135,21 +136,23 @@ export function StepRace() {
 
       {race && (
         <div className="flex flex-col gap-2">
-          <Label>Irk Özellikleri</Label>
+          <Label>{t("Racial Traits", "Irk Özellikleri")}</Label>
           {!allTraits ? (
             <Skeleton className="h-24 w-full" />
           ) : (
             <Accordion type="multiple" className="w-full">
-              {resolvedTraits.map((t) => (
-                <AccordionItem key={t.index} value={t.index}>
-                  <AccordionTrigger>{t.name}</AccordionTrigger>
+              {resolvedTraits.map((trait) => (
+                <AccordionItem key={trait.index} value={trait.index}>
+                  <AccordionTrigger>{trait.name}</AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    {localizedTraitDescription(t, language)}
+                    {localizedTraitDescription(trait, language)}
                   </AccordionContent>
                 </AccordionItem>
               ))}
               {resolvedTraits.length === 0 && (
-                <p className="text-sm text-muted-foreground">{slugToTitle(race.index)} için özellik bulunamadı.</p>
+                <p className="text-sm text-muted-foreground">
+                  {t(`No traits found for ${slugToTitle(race.index)}.`, `${slugToTitle(race.index)} için özellik bulunamadı.`)}
+                </p>
               )}
             </Accordion>
           )}

@@ -31,7 +31,7 @@ export function FeaturesPanel({
   character: Character;
   onUpdate: (patch: Partial<Character> | ((prev: Character) => Partial<Character>)) => void;
 }) {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const races = useSrdData(() => getRaces(character.edition), [character.edition]);
   const subraces = useSrdData(
     () => (character.raceIndex ? getSubracesForRace(character.edition, character.raceIndex) : Promise.resolve([])),
@@ -97,22 +97,22 @@ export function FeaturesPanel({
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Irk Özellikleri</CardTitle>
+          <CardTitle className="text-base">{t("Racial Traits", "Irk Özellikleri")}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <Skeleton className="h-32 w-full" />
           ) : (
             <Accordion type="multiple">
-              {raceTraits.map((t) => (
-                <AccordionItem key={t.index} value={t.index}>
-                  <AccordionTrigger>{t.name}</AccordionTrigger>
+              {raceTraits.map((trait) => (
+                <AccordionItem key={trait.index} value={trait.index}>
+                  <AccordionTrigger>{trait.name}</AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground">
-                    {localizedTraitDescription(t, language)}
+                    {localizedTraitDescription(trait, language)}
                   </AccordionContent>
                 </AccordionItem>
               ))}
-              {raceTraits.length === 0 && <p className="text-sm text-muted-foreground">Özellik bulunamadı.</p>}
+              {raceTraits.length === 0 && <p className="text-sm text-muted-foreground">{t("No traits found.", "Özellik bulunamadı.")}</p>}
             </Accordion>
           )}
         </CardContent>
@@ -120,7 +120,7 @@ export function FeaturesPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Sınıf &amp; Alt Sınıf Özellikleri</CardTitle>
+          <CardTitle className="text-base">{t("Class & Subclass Features", "Sınıf & Alt Sınıf Özellikleri")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {pendingSubclassChoices.length > 0 && (
@@ -129,10 +129,10 @@ export function FeaturesPanel({
                 const className = classes?.find((c) => c.index === classEntry.classIndex)?.name ?? classEntry.classIndex;
                 return (
                   <div key={classEntry.classIndex} className="flex flex-col gap-2">
-                    <Label>{className} Alt Sınıfı (Seviye {classEntry.level})</Label>
+                    <Label>{className} {t("Subclass", "Alt Sınıfı")} ({t("Level", "Seviye")} {classEntry.level})</Label>
                     <Select value="" onValueChange={(v) => chooseSubclass(classEntry.classIndex, v)}>
                       <SelectTrigger className="w-full sm:w-72">
-                        <SelectValue placeholder="Bir alt sınıf seç" />
+                        <SelectValue placeholder={t("Choose a subclass", "Bir alt sınıf seç")} />
                       </SelectTrigger>
                       <SelectContent>
                         {options.map((s) => (
@@ -156,7 +156,7 @@ export function FeaturesPanel({
                 .map((f) => (
                   <AccordionItem key={f.index} value={f.index}>
                     <AccordionTrigger>
-                      {f.name} <span className="ml-2 text-xs text-muted-foreground">Sv. {featureLevel(f)}</span>
+                      {f.name} <span className="ml-2 text-xs text-muted-foreground">{t("Lvl.", "Sv.")} {featureLevel(f)}</span>
                     </AccordionTrigger>
                     <AccordionContent className="text-sm text-muted-foreground">
                       {localizedFeatureDescription(f, language)}
@@ -164,7 +164,7 @@ export function FeaturesPanel({
                   </AccordionItem>
                 ))}
               {classFeatures.length === 0 && subclassFeatures.length === 0 && (
-                <p className="text-sm text-muted-foreground">Özellik bulunamadı.</p>
+                <p className="text-sm text-muted-foreground">{t("No features found.", "Özellik bulunamadı.")}</p>
               )}
             </Accordion>
           )}
@@ -173,7 +173,7 @@ export function FeaturesPanel({
 
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle className="text-base">Geçmiş</CardTitle>
+          <CardTitle className="text-base">{t("Background", "Geçmiş")}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           {normalizedBg?.featureName && (
@@ -184,7 +184,7 @@ export function FeaturesPanel({
           )}
           {normalizedBg?.grantedFeat && (
             <p>
-              <span className="font-medium text-foreground">Başlangıç Feat&apos;i:</span>{" "}
+              <span className="font-medium text-foreground">{t("Starting Feat:", "Başlangıç Feat'i:")}</span>{" "}
               {normalizedBg.grantedFeat.name}
             </p>
           )}

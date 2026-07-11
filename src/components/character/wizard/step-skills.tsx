@@ -7,6 +7,7 @@ import { normalizeBackground } from "@/lib/srd/background-adapter";
 import { translateSkill } from "@/lib/i18n/skills";
 import { slugToTitle } from "@/lib/slug";
 import { categorizeProficiencyIndex } from "@/lib/character/proficiency-utils";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import type { SrdChoice, SrdTrait } from "@/lib/srd/types";
 import { useWizard } from "./wizard-context";
 import { ReferenceChoicePicker } from "../reference-choice-picker";
@@ -15,9 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function labelForProficiencyRef(index: string, name: string): string {
+function labelForProficiencyRef(index: string, name: string, language: "en" | "tr"): string {
   const { category, cleanIndex } = categorizeProficiencyIndex(index);
-  if (category === "skill") return translateSkill(cleanIndex, name.replace(/^Skill: /, ""));
+  if (category === "skill") return translateSkill(cleanIndex, name.replace(/^Skill: /, ""), language);
   return name.replace(/^(Tool|Skill): /, "");
 }
 
@@ -29,6 +30,7 @@ interface ChoiceSource {
 
 export function StepSkills() {
   const { draft, update } = useWizard();
+  const { t, language } = useContentLanguage();
   const classes = useSrdData(() => getClasses(draft.edition), [draft.edition]);
   const races = useSrdData(() => getRaces(draft.edition), [draft.edition]);
   const subraces = useSrdData(
@@ -60,10 +62,12 @@ export function StepSkills() {
     if (selectedClass) {
       selectedClass.proficiency_choices
         .filter((c) => c.type === "proficiencies")
-        .forEach((c, i) => sources.push({ key: `class-${i}`, title: `${selectedClass.name} Yetkinliği`, choice: c }));
+        .forEach((c, i) =>
+          sources.push({ key: `class-${i}`, title: t(`${selectedClass.name} Proficiency`, `${selectedClass.name} Yetkinliği`), choice: c })
+        );
     }
-    raceTraitsWithChoices.forEach((t) =>
-      sources.push({ key: `trait-${t.index}`, title: t.name, choice: t.proficiency_choices! })
+    raceTraitsWithChoices.forEach((trait) =>
+      sources.push({ key: `trait-${trait.index}`, title: trait.name, choice: trait.proficiency_choices! })
     );
     return sources;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,7 +83,7 @@ export function StepSkills() {
   function getChoiceOptions(choice: SrdChoice) {
     return (choice.from.options ?? []).map((opt) => {
       const o = opt as { item: { index: string; name: string } };
-      return { index: o.item.index, label: labelForProficiencyRef(o.item.index, o.item.name) };
+      return { index: o.item.index, label: labelForProficiencyRef(o.item.index, o.item.name, language) };
     });
   }
 
@@ -111,7 +115,7 @@ export function StepSkills() {
   }, [normalizedBg?.index, selectionsBySource]);
 
   if (!selectedClass && classes) {
-    return <p className="text-sm text-muted-foreground">Önce bir sınıf seçmelisin.</p>;
+    return <p className="text-sm text-muted-foreground">{t("You must choose a class first.", "Önce bir sınıf seçmelisin.")}</p>;
   }
 
   return (
@@ -123,7 +127,7 @@ export function StepSkills() {
           {choiceSources.map((source) => (
             <div key={source.key} className="flex flex-col gap-2">
               <Label>
-                {source.title}: {source.choice.desc ?? `${source.choice.choose} seç`}
+                {source.title}: {source.choice.desc ?? t(`choose ${source.choice.choose}`, `${source.choice.choose} seç`)}
               </Label>
               <ReferenceChoicePicker
                 options={getChoiceOptions(source.choice)}
@@ -137,11 +141,13 @@ export function StepSkills() {
 
           {normalizedBg && normalizedBg.proficiencyRefs.length > 0 && (
             <div className="flex flex-col gap-2">
-              <Label>{normalizedBg.name} Geçmişinden Otomatik Yetkinlikler</Label>
+              <Label>
+                {t(`Automatic Proficiencies from ${normalizedBg.name} Background`, `${normalizedBg.name} Geçmişinden Otomatik Yetkinlikler`)}
+              </Label>
               <div className="flex flex-wrap gap-1.5">
                 {normalizedBg.proficiencyRefs.map((ref) => (
                   <Badge key={ref.index} variant="secondary">
-                    {labelForProficiencyRef(ref.index, ref.name)}
+                    {labelForProficiencyRef(ref.index, ref.name, language)}
                   </Badge>
                 ))}
               </div>
@@ -149,13 +155,13 @@ export function StepSkills() {
           )}
 
           <div className="flex flex-col gap-2">
-            <Label>Seçili Beceri Yetkinlikleri</Label>
+            <Label>{t("Selected Skill Proficiencies", "Seçili Beceri Yetkinlikleri")}</Label>
             <div className="flex flex-wrap gap-1.5">
               {draft.skillProficiencies.length === 0 && (
-                <span className="text-sm text-muted-foreground">Henüz beceri seçilmedi.</span>
+                <span className="text-sm text-muted-foreground">{t("No skills selected yet.", "Henüz beceri seçilmedi.")}</span>
               )}
               {draft.skillProficiencies.map((s) => (
-                <Badge key={s}>{translateSkill(s, slugToTitle(s))}</Badge>
+                <Badge key={s}>{translateSkill(s, slugToTitle(s), language)}</Badge>
               ))}
             </div>
           </div>

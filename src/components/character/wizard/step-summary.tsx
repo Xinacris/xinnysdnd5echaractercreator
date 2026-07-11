@@ -12,6 +12,7 @@ import { computeFinalAbilityScores } from "@/lib/character/ability-bonuses";
 import { getCharacterRepository } from "@/lib/character/storage";
 import { translateSkill } from "@/lib/i18n/skills";
 import { slugToTitle } from "@/lib/slug";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import { useWizard } from "./wizard-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import { Loader2 } from "lucide-react";
 
 export function StepSummary() {
   const { draft } = useWizard();
+  const { t, language } = useContentLanguage();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
@@ -56,11 +58,11 @@ export function StepSummary() {
 
   async function handleFinish() {
     if (!draft.name.trim()) {
-      toast.error("Karaktere bir isim vermelisin.");
+      toast.error(t("You must give your character a name.", "Karaktere bir isim vermelisin."));
       return;
     }
     if (!selectedClass) {
-      toast.error("Bir sınıf seçmelisin.");
+      toast.error(t("You must choose a class.", "Bir sınıf seçmelisin."));
       return;
     }
     setSaving(true);
@@ -76,15 +78,15 @@ export function StepSummary() {
       updatedAt: new Date().toISOString(),
     };
     await getCharacterRepository().save(finalCharacter);
-    toast.success(`${draft.name} oluşturuldu!`);
-    router.push(`/karakter/${draft.id}`);
+    toast.success(t(`${draft.name} created!`, `${draft.name} oluşturuldu!`));
+    router.push(`/character/${draft.id}`);
   }
 
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>{draft.name || "İsimsiz Karakter"}</CardTitle>
+          <CardTitle>{draft.name || t("Unnamed Character", "İsimsiz Karakter")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm">
           <div className="flex flex-wrap gap-1.5">
@@ -112,15 +114,15 @@ export function StepSummary() {
 
           {selectedClass && (
             <p>
-              Can Puanı (1. seviye): <span className="font-medium">{maxHp}</span> (d{selectedClass.hit_die} +{" "}
-              {formatModifier(conMod)} CON)
+              {t("Hit Points (level 1)", "Can Puanı (1. seviye)")}: <span className="font-medium">{maxHp}</span> (d
+              {selectedClass.hit_die} + {formatModifier(conMod)} CON)
             </p>
           )}
 
           <div className="flex flex-wrap gap-1.5">
             {draft.skillProficiencies.map((s) => (
               <Badge key={s} variant="outline">
-                {translateSkill(s, slugToTitle(s))}
+                {translateSkill(s, slugToTitle(s), language)}
               </Badge>
             ))}
           </div>
@@ -133,13 +135,13 @@ export function StepSummary() {
               </Badge>
             ))}
           </div>
-          <p className="text-muted-foreground">Altın: {draft.currency.gp} GP</p>
+          <p className="text-muted-foreground">{t("Gold", "Altın")}: {draft.currency.gp} GP</p>
         </CardContent>
       </Card>
 
       <Button onClick={handleFinish} disabled={saving} size="lg">
         {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-        Karakteri Oluştur
+        {t("Create Character", "Karakteri Oluştur")}
       </Button>
     </div>
   );

@@ -23,6 +23,7 @@ export const SKILL_NAME_TR: Record<string, string> = {
   survival: "Hayatta Kalma",
 };
 
-export function translateSkill(index: string, fallbackName: string): string {
+export function translateSkill(index: string, fallbackName: string, language: "en" | "tr" = "tr"): string {
+  if (language === "en") return fallbackName;
   return SKILL_NAME_TR[index] ?? fallbackName;
 }

@@ -8,6 +8,7 @@ import type { Character } from "@/lib/character/types";
 import { totalCharacterLevel } from "@/lib/character/calculations";
 import { slugToTitle } from "@/lib/slug";
 import { exportCharacterToJson, getCharacterRepository } from "@/lib/character/storage";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,12 +40,13 @@ export function SheetHeader({
 }) {
   const router = useRouter();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { t } = useContentLanguage();
 
   const classSummary = character.classes.map((c) => `${slugToTitle(c.classIndex)} ${c.level}`).join(" / ");
 
   async function handleDelete() {
     await getCharacterRepository().remove(character.id);
-    toast.success("Karakter silindi.");
+    toast.success(t("Character deleted.", "Karakter silindi."));
     router.push("/");
   }
 
@@ -52,13 +54,13 @@ export function SheetHeader({
     const copy: Character = {
       ...character,
       id: crypto.randomUUID(),
-      name: `${character.name} (Kopya)`,
+      name: `${character.name} (${t("Copy", "Kopya")})`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
     await getCharacterRepository().save(copy);
-    toast.success("Karakter kopyalandı.");
-    router.push(`/karakter/${copy.id}`);
+    toast.success(t("Character duplicated.", "Karakter kopyalandı."));
+    router.push(`/character/${copy.id}`);
   }
 
   function handleExport() {
@@ -67,7 +69,7 @@ export function SheetHeader({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${character.name || "karakter"}.json`;
+    a.download = `${character.name || t("character", "karakter")}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -79,10 +81,10 @@ export function SheetHeader({
           value={character.name}
           onChange={(e) => onUpdate({ name: e.target.value })}
           className="max-w-md border-none px-0 text-2xl font-semibold shadow-none focus-visible:ring-0"
-          placeholder="Karakter Adı"
+          placeholder={t("Character Name", "Karakter Adı")}
         />
         <div className="flex items-center gap-2">
-          <Button onClick={onLevelUp}>Seviye Atla</Button>
+          <Button onClick={onLevelUp}>{t("Level Up", "Seviye Atla")}</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
@@ -91,13 +93,13 @@ export function SheetHeader({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleDuplicate}>
-                <Copy className="h-4 w-4" /> Kopyala
+                <Copy className="h-4 w-4" /> {t("Duplicate", "Kopyala")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExport}>
-                <Download className="h-4 w-4" /> Dışa Aktar (JSON)
+                <Download className="h-4 w-4" /> {t("Export (JSON)", "Dışa Aktar (JSON)")}
               </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
-                <Trash2 className="h-4 w-4" /> Sil
+                <Trash2 className="h-4 w-4" /> {t("Delete", "Sil")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -109,7 +111,7 @@ export function SheetHeader({
           {slugToTitle(character.subraceIndex ?? character.raceIndex ?? "")}
         </Badge>
         <Badge variant="secondary">
-          Seviye {totalCharacterLevel(character)} · {classSummary}
+          {t("Level", "Seviye")} {totalCharacterLevel(character)} · {classSummary}
         </Badge>
         {(character.customBackgroundName || character.backgroundIndex) && (
           <Badge variant="secondary">
@@ -121,14 +123,18 @@ export function SheetHeader({
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Karakteri sil</AlertDialogTitle>
+            <AlertDialogTitle>{t("Delete character", "Karakteri sil")}</AlertDialogTitle>
             <AlertDialogDescription>
-              &quot;{character.name}&quot; kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              &quot;{character.name}&quot;{" "}
+              {t(
+                "will be permanently deleted. This action cannot be undone.",
+                "kalıcı olarak silinecek. Bu işlem geri alınamaz."
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Sil</AlertDialogAction>
+            <AlertDialogCancel>{t("Cancel", "Vazgeç")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("Delete", "Sil")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

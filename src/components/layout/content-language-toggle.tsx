@@ -3,7 +3,7 @@
 import { useContentLanguage } from "@/lib/i18n/content-language";
 import { Button } from "@/components/ui/button";
 
-/** Switches the language spell/feature/trait descriptions render in throughout the app. */
+/** Switches the language the whole site (UI chrome and SRD content) renders in. */
 export function ContentLanguageToggle() {
   const { language, setLanguage } = useContentLanguage();
 

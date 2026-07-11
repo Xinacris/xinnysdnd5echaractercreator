@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function StepClass() {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const { draft, update } = useWizard();
   const classes = useSrdData(() => getClasses(draft.edition), [draft.edition]);
   const primaryClass = draft.classes[0];
@@ -59,13 +59,13 @@ export function StepClass() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label>Sınıf</Label>
+        <Label>{t("Class", "Sınıf")}</Label>
         {!classes ? (
           <Skeleton className="h-9 w-full sm:w-80" />
         ) : (
           <Select value={classIndex} onValueChange={selectClass}>
             <SelectTrigger className="w-full sm:w-80">
-              <SelectValue placeholder="Bir sınıf seç" />
+              <SelectValue placeholder={t("Select a class", "Bir sınıf seç")} />
             </SelectTrigger>
             <SelectContent>
               {classes.map((c) => (
@@ -77,19 +77,26 @@ export function StepClass() {
           </Select>
         )}
         <p className="text-xs text-muted-foreground">
-          Çoklu sınıf (multiclass) seviye atlarken karakter sayfasından eklenebilir.
+          {t(
+            "Multiclassing can be added from the character sheet when leveling up.",
+            "Çoklu sınıf (multiclass) seviye atlarken karakter sayfasından eklenebilir."
+          )}
         </p>
       </div>
 
       {selectedClass && (
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary">Vuruş Zarı: d{selectedClass.hit_die}</Badge>
+          <Badge variant="secondary">
+            {t("Hit Die", "Vuruş Zarı")}: d{selectedClass.hit_die}
+          </Badge>
           {selectedClass.saving_throws.map((s) => (
-            <Badge key={s.index}>Kurtulma: {ABILITY_ABBR[s.index as AbilityKey]}</Badge>
+            <Badge key={s.index}>
+              {t("Save", "Kurtulma")}: {ABILITY_ABBR[s.index as AbilityKey]}
+            </Badge>
           ))}
           {selectedClass.primary_ability?.ability_scores.map((p) => (
             <Badge key={p.index} variant="outline">
-              Ana Özellik: {ABILITY_ABBR[p.index as AbilityKey] ?? p.name}
+              {t("Primary Ability", "Ana Özellik")}: {ABILITY_ABBR[p.index as AbilityKey] ?? p.name}
             </Badge>
           ))}
         </div>
@@ -97,7 +104,7 @@ export function StepClass() {
 
       {selectedClass && (
         <div className="flex flex-col gap-2">
-          <Label>Zırh / Silah / Araç Yetkinlikleri</Label>
+          <Label>{t("Armor / Weapon / Tool Proficiencies", "Zırh / Silah / Araç Yetkinlikleri")}</Label>
           <div className="flex flex-wrap gap-1.5">
             {selectedClass.proficiencies.map((p) => (
               <Badge key={p.index} variant="outline">
@@ -110,10 +117,12 @@ export function StepClass() {
 
       {showSubclassChoice && (
         <div className="flex flex-col gap-2">
-          <Label>{selectedClass?.name} Alt Sınıfı</Label>
+          <Label>
+            {selectedClass?.name} {t("Subclass", "Alt Sınıfı")}
+          </Label>
           <Select value={draft.classes[0]?.subclassIndex ?? ""} onValueChange={selectSubclass}>
             <SelectTrigger className="w-full sm:w-80">
-              <SelectValue placeholder="Bir alt sınıf seç" />
+              <SelectValue placeholder={t("Select a subclass", "Bir alt sınıf seç")} />
             </SelectTrigger>
             <SelectContent>
               {subclasses!.map((s) => (

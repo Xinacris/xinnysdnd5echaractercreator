@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 
 export interface ResolvedEquipmentItem {
   index: string;
@@ -26,33 +27,33 @@ type OptionNode =
 // consumers (step-equipment) route this into currency instead of the inventory.
 export const GOLD_SENTINEL_INDEX = "__gold__";
 
-function nodeLabel(node: OptionNode): string {
+function nodeLabel(node: OptionNode, t: (en: string, tr: string) => string): string {
   switch (node.option_type) {
     case "counted_reference":
       return node.count > 1 ? `${node.count}x ${node.of.name}` : node.of.name;
     case "reference":
       return node.item.name;
     case "multiple":
-      return node.items.map(nodeLabel).join(" + ");
+      return node.items.map((item) => nodeLabel(item, t)).join(" + ");
     case "choice":
-      return node.choice.desc ?? `${node.choice.choose} seçim`;
+      return node.choice.desc ?? `${node.choice.choose} ${t("selection", "seçim")}`;
     case "money":
       return `${node.count} ${node.unit.toUpperCase()}`;
   }
 }
 
-function leafItems(node: OptionNode): ResolvedEquipmentItem[] | null {
+function leafItems(node: OptionNode, t: (en: string, tr: string) => string): ResolvedEquipmentItem[] | null {
   switch (node.option_type) {
     case "counted_reference":
       return [{ index: node.of.index, name: node.of.name, quantity: node.count }];
     case "reference":
       return [{ index: node.item.index, name: node.item.name, quantity: 1 }];
     case "money":
-      return [{ index: GOLD_SENTINEL_INDEX, name: "Altın (GP)", quantity: node.count }];
+      return [{ index: GOLD_SENTINEL_INDEX, name: t("Gold (GP)", "Altın (GP)"), quantity: node.count }];
     case "multiple": {
       const results: ResolvedEquipmentItem[] = [];
       for (const item of node.items) {
-        const resolved = leafItems(item);
+        const resolved = leafItems(item, t);
         if (!resolved) return null;
         results.push(...resolved);
       }
@@ -136,7 +137,8 @@ function NodeResolver({
   edition: SrdEdition;
   onResolve: (items: ResolvedEquipmentItem[]) => void;
 }) {
-  const leaf = useMemo(() => leafItems(node), [node]);
+  const { t } = useContentLanguage();
+  const leaf = useMemo(() => leafItems(node, t), [node, t]);
 
   useEffect(() => {
     if (leaf) onResolve(leaf);
@@ -210,6 +212,7 @@ export function EquipmentChoiceGroup({
   edition: SrdEdition;
   onResolve: (items: ResolvedEquipmentItem[]) => void;
 }) {
+  const { t } = useContentLanguage();
   const [selectedIndices, setSelectedIndices] = useState<number[]>(choice.choose === 1 ? [0] : []);
   const [resolvedByOption, setResolvedByOption] = useState<Record<number, ResolvedEquipmentItem[]>>({});
 
@@ -243,7 +246,7 @@ export function EquipmentChoiceGroup({
             <div key={i} className="flex items-center gap-2">
               <RadioGroupItem value={String(i)} id={`eq-${i}`} />
               <Label htmlFor={`eq-${i}`} className="font-normal">
-                {nodeLabel(opt)}
+                {nodeLabel(opt, t)}
               </Label>
             </div>
           ))}
@@ -272,7 +275,7 @@ export function EquipmentChoiceGroup({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
-        {selectedIndices.length} / {choice.choose} seçildi
+        {selectedIndices.length} / {choice.choose} {t("selected", "seçildi")}
       </p>
       {options.map((opt, i) => {
         const checked = selectedIndices.includes(i);
@@ -287,7 +290,7 @@ export function EquipmentChoiceGroup({
                 onCheckedChange={(c) => toggle(i, c === true)}
               />
               <Label htmlFor={`eq-${i}`} className={`font-normal ${disabled ? "text-muted-foreground" : ""}`}>
-                {nodeLabel(opt)}
+                {nodeLabel(opt, t)}
               </Label>
             </div>
             {checked && (

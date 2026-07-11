@@ -39,7 +39,7 @@ export function CombatPanel({
   character: Character;
   onUpdate: (patch: Partial<Character> | ((prev: Character) => Partial<Character>)) => void;
 }) {
-  const { language } = useContentLanguage();
+  const { language, t } = useContentLanguage();
   const classes = useSrdData(() => getClasses(character.edition), [character.edition]);
   const equipment = useSrdData(() => getEquipment(character.edition), [character.edition]);
   const races = useSrdData(() => getRaces(character.edition), [character.edition]);
@@ -217,7 +217,7 @@ export function CombatPanel({
         <Card className="md:col-span-2 xl:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Swords className="h-4 w-4" /> Saldırılar
+              <Swords className="h-4 w-4" /> {t("Attacks", "Saldırılar")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
@@ -227,7 +227,9 @@ export function CombatPanel({
                   const used = character.spellcasting.slotsUsed[level] ?? 0;
                   return (
                     <div key={level} className="flex items-center gap-2 text-sm">
-                      <span className="w-16 text-xs text-muted-foreground">Sv. {level} Yuva</span>
+                      <span className="w-16 text-xs text-muted-foreground">
+                        {t("Lvl.", "Sv.")} {level} {t("Slot", "Yuva")}
+                      </span>
                       <div className="flex gap-1">
                         {Array.from({ length: total }).map((_, i) => (
                           <button
@@ -249,11 +251,14 @@ export function CombatPanel({
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                 <span className="font-medium">
                   <InfoTooltip description={localizedFeatureDescription(divineSmiteFeature!, language)}>
-                    Kutsal Vuruş (Divine Smite)
+                    {t("Divine Smite", "Kutsal Vuruş (Divine Smite)")}
                   </InfoTooltip>
                 </span>
                 <span className="text-muted-foreground">
-                  Hasar 2d8 (Sv.1) · 3d8 (Sv.2) · 4d8 (Sv.3) · 5d8 (Sv.4+) Radiant (+1d8 Undead/İblis)
+                  {t(
+                    "Damage 2d8 (Slot 1) · 3d8 (Slot 2) · 4d8 (Slot 3) · 5d8 (Slot 4+) Radiant (+1d8 vs Undead/Fiend)",
+                    "Hasar 2d8 (Sv.1) · 3d8 (Sv.2) · 4d8 (Sv.3) · 5d8 (Sv.4+) Radiant (+1d8 Undead/İblis)"
+                  )}
                 </span>
               </div>
             )}
@@ -267,10 +272,10 @@ export function CombatPanel({
                 <div key={w.index} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">{w.name}</span>
                   <span className="text-muted-foreground">
-                    Vuruş {formatModifier(attackBonus)}
+                    {t("Attack", "Vuruş")} {formatModifier(attackBonus)}
                     {damage &&
-                      ` · Hasar ${damage.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""} ${damage.damage_type.name}`}
-                    {versatile && ` (iki elle ${versatile.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""})`}
+                      ` · ${t("Damage", "Hasar")} ${damage.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""} ${damage.damage_type.name}`}
+                    {versatile && ` (${t("two-handed", "iki elle")} ${versatile.damage_dice}${abilityMod !== 0 ? ` ${formatModifier(abilityMod)}` : ""})`}
                   </span>
                 </div>
               );
@@ -280,15 +285,17 @@ export function CombatPanel({
               const damageText = spellDamageText(s, totalCharacterLevel(character));
               const healText = spellHealText(s, spellAbilityMod);
               const parts: string[] = [];
-              if (s.attack_type) parts.push(`Vuruş ${formatModifier(spellAttackBonus(profBonus, spellAbilityMod))}`);
-              if (s.dc) parts.push(`KZ ${spellSaveDc(profBonus, spellAbilityMod)} (${s.dc.dc_type.name})`);
-              if (damageText) parts.push(`Hasar ${damageText}`);
-              if (healText) parts.push(`İyileştirme ${healText}`);
+              if (s.attack_type) parts.push(`${t("Attack", "Vuruş")} ${formatModifier(spellAttackBonus(profBonus, spellAbilityMod))}`);
+              if (s.dc) parts.push(`${t("DC", "KZ")} ${spellSaveDc(profBonus, spellAbilityMod)} (${s.dc.dc_type.name})`);
+              if (damageText) parts.push(`${t("Damage", "Hasar")} ${damageText}`);
+              if (healText) parts.push(`${t("Healing", "İyileştirme")} ${healText}`);
               return (
                 <div key={s.index} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium">
                     <InfoTooltip description={localizedSpellDescription(s, language)}>{s.name}</InfoTooltip>{" "}
-                    <span className="text-xs text-muted-foreground">({s.level === 0 ? "Kantrip" : `Sv. ${s.level}`})</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({s.level === 0 ? t("Cantrip", "Kantrip") : `${t("Lvl.", "Sv.")} ${s.level}`})
+                    </span>
                   </span>
                   <span className="text-muted-foreground">{parts.join(" · ")}</span>
                 </div>
@@ -301,18 +308,20 @@ export function CombatPanel({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Shield className="h-4 w-4" /> Zırh Sınıfı
+            <Shield className="h-4 w-4" /> {t("Armor Class", "Zırh Sınıfı")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold">{armorClass}</div>
           <p className="text-xs text-muted-foreground">
-            {character.armorClassOverride !== undefined ? "Manuel değer" : "Otomatik hesaplandı"}
+            {character.armorClassOverride !== undefined
+              ? t("Manual value", "Manuel değer")
+              : t("Automatically calculated", "Otomatik hesaplandı")}
           </p>
           <div className="mt-2 flex items-center gap-2">
             <Input
               type="number"
-              placeholder="Manuel"
+              placeholder={t("Manual", "Manuel")}
               className="h-8 w-20"
               value={character.armorClassOverride ?? ""}
               onChange={(e) =>
@@ -321,15 +330,19 @@ export function CombatPanel({
             />
           </div>
           <Separator className="my-2" />
-          <p className="text-sm">İnisiyatif: {formatModifier(dexMod)}</p>
-          <p className="text-sm">Hız: {race?.speed ?? 30} fit</p>
+          <p className="text-sm">
+            {t("Initiative:", "İnisiyatif:")} {formatModifier(dexMod)}
+          </p>
+          <p className="text-sm">
+            {t("Speed:", "Hız:")} {race?.speed ?? 30} {t("ft", "fit")}
+          </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Heart className="h-4 w-4" /> Can Puanı
+            <Heart className="h-4 w-4" /> {t("Hit Points", "Can Puanı")}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
@@ -343,7 +356,7 @@ export function CombatPanel({
             <span className="text-muted-foreground">/ {maxHp}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Label className="whitespace-nowrap">Geçici CP:</Label>
+            <Label className="whitespace-nowrap">{t("Temp HP:", "Geçici CP:")}</Label>
             <Input
               type="number"
               value={character.temporaryHitPoints}
@@ -359,10 +372,10 @@ export function CombatPanel({
               className="h-8 w-16"
             />
             <Button size="sm" variant="outline" onClick={() => applyDamage(healAmount)}>
-              Hasar Al
+              {t("Take Damage", "Hasar Al")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => applyHeal(healAmount)}>
-              İyileştir
+              {t("Heal", "İyileştir")}
             </Button>
           </div>
         </CardContent>
@@ -370,22 +383,22 @@ export function CombatPanel({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Vuruş Zarları &amp; Dinlenme</CardTitle>
+          <CardTitle className="text-base">{t("Hit Dice & Rest", "Vuruş Zarları & Dinlenme")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <p className="text-sm">
-            Kalan Zar: {remainingDice} / {totalDice} (d{primaryHitDie})
+            {t("Remaining Dice:", "Kalan Zar:")} {remainingDice} / {totalDice} (d{primaryHitDie})
           </p>
           <Button size="sm" variant="outline" onClick={spendHitDie} disabled={remainingDice <= 0}>
-            1 Zar Harca
+            {t("Spend 1 Die", "1 Zar Harca")}
           </Button>
           <Separator />
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={shortRest}>
-              <Sun className="h-4 w-4" /> Kısa Dinlenme
+              <Sun className="h-4 w-4" /> {t("Short Rest", "Kısa Dinlenme")}
             </Button>
             <Button size="sm" variant="outline" onClick={longRest}>
-              <Moon className="h-4 w-4" /> Uzun Dinlenme
+              <Moon className="h-4 w-4" /> {t("Long Rest", "Uzun Dinlenme")}
             </Button>
           </div>
         </CardContent>
@@ -395,17 +408,17 @@ export function CombatPanel({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Flame className="h-4 w-4" /> Öfke (Rage)
+              <Flame className="h-4 w-4" /> {t("Rage", "Öfke (Rage)")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <p className="text-sm">
-              Kalan: {rageUnlimited ? "Sınırsız" : `${rageRemaining} / ${rageTotal}`}
+              {t("Remaining:", "Kalan:")} {rageUnlimited ? t("Unlimited", "Sınırsız") : `${rageRemaining} / ${rageTotal}`}
             </p>
             <Button size="sm" variant="outline" onClick={spendRage} disabled={!rageUnlimited && rageRemaining === 0}>
-              1 Öfke Harca
+              {t("Spend 1 Rage", "1 Öfke Harca")}
             </Button>
-            <p className="text-xs text-muted-foreground">Uzun dinlenmede sıfırlanır.</p>
+            <p className="text-xs text-muted-foreground">{t("Resets on a long rest.", "Uzun dinlenmede sıfırlanır.")}</p>
           </CardContent>
         </Card>
       )}
@@ -414,12 +427,12 @@ export function CombatPanel({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <HandHeart className="h-4 w-4" /> El Değmesi (Lay on Hands)
+              <HandHeart className="h-4 w-4" /> {t("Lay on Hands", "El Değmesi (Lay on Hands)")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <p className="text-sm">
-              Kalan: {layOnHandsRemaining} / {layOnHandsPool}
+              {t("Remaining:", "Kalan:")} {layOnHandsRemaining} / {layOnHandsPool}
             </p>
             <div className="flex items-center gap-2">
               <Input
@@ -435,10 +448,10 @@ export function CombatPanel({
                 onClick={() => spendLayOnHands(layOnHandsSpend)}
                 disabled={layOnHandsRemaining === 0}
               >
-                Harca
+                {t("Spend", "Harca")}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">Uzun dinlenmede sıfırlanır.</p>
+            <p className="text-xs text-muted-foreground">{t("Resets on a long rest.", "Uzun dinlenmede sıfırlanır.")}</p>
           </CardContent>
         </Card>
       )}
@@ -447,24 +460,26 @@ export function CombatPanel({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <PawPrint className="h-4 w-4" /> Yaban Formu (Wild Shape)
+              <PawPrint className="h-4 w-4" /> {t("Wild Shape", "Yaban Formu (Wild Shape)")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <p className="text-sm">
-              Kalan: {wildShapeRemaining} / {wildShapeTotal}
+              {t("Remaining:", "Kalan:")} {wildShapeRemaining} / {wildShapeTotal}
             </p>
             <Button size="sm" variant="outline" onClick={spendWildShape} disabled={wildShapeRemaining === 0}>
-              1 Kullan
+              {t("Use 1", "1 Kullan")}
             </Button>
-            <p className="text-xs text-muted-foreground">Kısa ya da uzun dinlenmede sıfırlanır.</p>
+            <p className="text-xs text-muted-foreground">
+              {t("Resets on a short or long rest.", "Kısa ya da uzun dinlenmede sıfırlanır.")}
+            </p>
           </CardContent>
         </Card>
       )}
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Diğer</CardTitle>
+          <CardTitle className="text-base">{t("Other", "Diğer")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <label className="flex items-center gap-2 text-sm">
@@ -472,10 +487,10 @@ export function CombatPanel({
               checked={character.inspiration}
               onCheckedChange={(c) => onUpdate({ inspiration: c === true })}
             />
-            İlham (Inspiration)
+            {t("Inspiration", "İlham (Inspiration)")}
           </label>
           <div className="flex items-center gap-2 text-sm">
-            <Label className="whitespace-nowrap">Bitkinlik:</Label>
+            <Label className="whitespace-nowrap">{t("Exhaustion:", "Bitkinlik:")}</Label>
             <Input
               type="number"
               min={0}
@@ -486,9 +501,9 @@ export function CombatPanel({
             />
           </div>
           <div className="flex flex-col gap-1 text-sm">
-            <span>Ölüm Kurtarma Zarları</span>
+            <span>{t("Death Saving Throws", "Ölüm Kurtarma Zarları")}</span>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">Başarı</span>
+              <span className="text-xs text-muted-foreground">{t("Success", "Başarı")}</span>
               {[0, 1, 2].map((i) => (
                 <Checkbox
                   key={`s${i}`}
@@ -505,7 +520,7 @@ export function CombatPanel({
               ))}
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">Başarısız</span>
+              <span className="text-xs text-muted-foreground">{t("Failure", "Başarısız")}</span>
               {[0, 1, 2].map((i) => (
                 <Checkbox
                   key={`f${i}`}

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getEquipment, getMagicItems } from "@/lib/srd/loader";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import type { Character, InventoryItem } from "@/lib/character/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function InventoryPanel({
   const equipment = useSrdData(() => getEquipment(character.edition), [character.edition]);
   const magicItems = useSrdData(() => getMagicItems(character.edition), [character.edition]);
   const [open, setOpen] = useState(false);
+  const { t } = useContentLanguage();
 
   const catalog = useMemo(
     () => [
@@ -72,7 +74,7 @@ export function InventoryPanel({
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Para Birimi</CardTitle>
+          <CardTitle className="text-base">{t("Currency", "Para Birimi")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {(["pp", "gp", "ep", "sp", "cp"] as const).map((key) => (
@@ -91,18 +93,18 @@ export function InventoryPanel({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Envanter</CardTitle>
+          <CardTitle className="text-base">{t("Inventory", "Envanter")}</CardTitle>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button size="sm">
-                <Plus className="h-4 w-4" /> Eşya Ekle
+                <Plus className="h-4 w-4" /> {t("Add Item", "Eşya Ekle")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0" align="end">
               <Command>
-                <CommandInput placeholder="Eşya ara..." />
+                <CommandInput placeholder={t("Search items...", "Eşya ara...")} />
                 <CommandList>
-                  <CommandEmpty>Bulunamadı.</CommandEmpty>
+                  <CommandEmpty>{t("Not found.", "Bulunamadı.")}</CommandEmpty>
                   <CommandGroup>
                     {catalog.slice(0, 400).map((item) => (
                       <CommandItem
@@ -113,7 +115,7 @@ export function InventoryPanel({
                         {item.name}
                         {item.magic && (
                           <Badge variant="secondary" className="ml-auto text-[10px]">
-                            Büyülü
+                            {t("Magic", "Büyülü")}
                           </Badge>
                         )}
                       </CommandItem>
@@ -126,14 +128,14 @@ export function InventoryPanel({
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {character.inventory.length === 0 && (
-            <p className="text-sm text-muted-foreground">Envanterde eşya yok.</p>
+            <p className="text-sm text-muted-foreground">{t("No items in inventory.", "Envanterde eşya yok.")}</p>
           )}
           {character.inventory.map((item) => (
             <div key={item.id} className="flex items-center gap-2 rounded-md border border-border p-2">
               <Checkbox
                 checked={item.equipped}
                 onCheckedChange={(c) => updateItem(item.id, { equipped: c === true })}
-                title="Kuşanılmış"
+                title={t("Equipped", "Kuşanılmış")}
               />
               <span className="flex-1 text-sm">{item.name}</span>
               <Input

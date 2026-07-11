@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getBackgrounds, getRaces, getSubracesForRace } from "@/lib/srd/loader";
 import { normalizeBackground } from "@/lib/srd/background-adapter";
-import { ABILITY_ABBR, ABILITY_FULL_TR, ABILITY_KEYS, type AbilityKey } from "@/lib/i18n/abilities";
+import { ABILITY_ABBR, ABILITY_KEYS, abilityFullName, type AbilityKey } from "@/lib/i18n/abilities";
 import { abilityModifier, formatModifier } from "@/lib/character/calculations";
 import { computeFinalAbilityScores } from "@/lib/character/ability-bonuses";
 import { STANDARD_ARRAY, POINT_BUY_BUDGET, DEFAULT_ABILITY_SCORES, type AbilityScoreBlock, type AbilityScoreMethod } from "@/lib/character/types";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import { useWizard } from "./wizard-context";
 import { BackgroundAbilityAllocator } from "./background-ability-allocator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +28,7 @@ function rollAbility(): number {
 }
 
 export function StepAbilities() {
+  const { t, language } = useContentLanguage();
   const { draft, update } = useWizard();
   const races = useSrdData(() => getRaces(draft.edition), [draft.edition]);
   const subraces = useSrdData(
@@ -94,13 +96,13 @@ export function StepAbilities() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Label>Yöntem</Label>
+        <Label>{t("Method", "Yöntem")}</Label>
         <Tabs value={method} onValueChange={(v) => setMethod(v as AbilityScoreMethod)}>
           <TabsList>
-            <TabsTrigger value="standard">Standart Dizi</TabsTrigger>
-            <TabsTrigger value="pointbuy">Puan Alışverişi</TabsTrigger>
-            <TabsTrigger value="roll">Zar At</TabsTrigger>
-            <TabsTrigger value="manual">Manuel</TabsTrigger>
+            <TabsTrigger value="standard">{t("Standard Array", "Standart Dizi")}</TabsTrigger>
+            <TabsTrigger value="pointbuy">{t("Point Buy", "Puan Alışverişi")}</TabsTrigger>
+            <TabsTrigger value="roll">{t("Roll", "Zar At")}</TabsTrigger>
+            <TabsTrigger value="manual">{t("Manual", "Manuel")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -109,17 +111,18 @@ export function StepAbilities() {
         <div className="flex items-center gap-3">
           <Button type="button" variant="outline" onClick={rollNewSet}>
             <Dices className="h-4 w-4" />
-            Zar At (4d6, en düşüğü at)
+            {t("Roll (4d6, drop lowest)", "Zar At (4d6, en düşüğü at)")}
           </Button>
           {rolledPool.length > 0 && (
-            <span className="text-sm text-muted-foreground">Sonuçlar: {rolledPool.join(", ")}</span>
+            <span className="text-sm text-muted-foreground">{t("Results", "Sonuçlar")}: {rolledPool.join(", ")}</span>
           )}
         </div>
       )}
 
       {method === "pointbuy" && (
         <p className="text-sm text-muted-foreground">
-          Kalan puan: <span className="font-medium text-foreground">{POINT_BUY_BUDGET - pointsUsed}</span> /{" "}
+          {t("Points remaining", "Kalan puan")}:{" "}
+          <span className="font-medium text-foreground">{POINT_BUY_BUDGET - pointsUsed}</span> /{" "}
           {POINT_BUY_BUDGET}
         </p>
       )}
@@ -133,7 +136,7 @@ export function StepAbilities() {
               <CardContent className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">{ABILITY_ABBR[key]}</span>
-                  <span className="text-xs text-muted-foreground">{ABILITY_FULL_TR[key]}</span>
+                  <span className="text-xs text-muted-foreground">{abilityFullName(key, language)}</span>
                 </div>
 
                 {(method === "standard" || method === "roll") && (
@@ -142,7 +145,7 @@ export function StepAbilities() {
                     onValueChange={(v) => handleArrayAssign(key, v)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Seç" />
+                      <SelectValue placeholder={t("Select", "Seç")} />
                     </SelectTrigger>
                     <SelectContent>
                       {pool.map((v, i) => (
@@ -195,8 +198,8 @@ export function StepAbilities() {
                 )}
 
                 <div className="text-sm text-muted-foreground">
-                  Temel {base[key]} → Toplam <span className="font-medium text-foreground">{finalScore}</span> (
-                  {formatModifier(mod)})
+                  {t("Base", "Temel")} {base[key]} → {t("Total", "Toplam")}{" "}
+                  <span className="font-medium text-foreground">{finalScore}</span> ({formatModifier(mod)})
                 </div>
               </CardContent>
             </Card>
@@ -206,7 +209,9 @@ export function StepAbilities() {
 
       {normalizedBg?.abilityScoreOptions && normalizedBg.abilityScoreOptions.length > 0 && (
         <div className="flex flex-col gap-2">
-          <Label>Geçmişten Gelen Yetenek Puanı Bonusu ({normalizedBg.name})</Label>
+          <Label>
+            {t("Ability Score Bonus from Background", "Geçmişten Gelen Yetenek Puanı Bonusu")} ({normalizedBg.name})
+          </Label>
           <BackgroundAbilityAllocator
             options={normalizedBg.abilityScoreOptions}
             value={draft.backgroundAbilityScoreChoices ?? {}}

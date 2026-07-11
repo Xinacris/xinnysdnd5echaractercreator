@@ -3,8 +3,9 @@
 import { useSrdData } from "@/hooks/use-srd-data";
 import { getFeatures, getSkills } from "@/lib/srd/loader";
 import { featureLevel } from "@/lib/srd/text";
-import { ABILITY_ABBR, ABILITY_FULL_TR, ABILITY_KEYS, type AbilityKey } from "@/lib/i18n/abilities";
+import { ABILITY_ABBR, ABILITY_KEYS, abilityFullName, type AbilityKey } from "@/lib/i18n/abilities";
 import { translateSkill } from "@/lib/i18n/skills";
+import { useContentLanguage } from "@/lib/i18n/content-language";
 import {
   abilityModifier,
   formatModifier,
@@ -40,6 +41,7 @@ export function AbilitiesSkillsPanel({
   character: Character;
   onUpdate: (patch: Partial<Character>) => void;
 }) {
+  const { t, language } = useContentLanguage();
   const skills = useSrdData(() => getSkills(character.edition), [character.edition]);
   const allFeatures = useSrdData(() => getFeatures(character.edition), [character.edition]);
   const profBonus = proficiencyBonus(totalCharacterLevel(character));
@@ -84,13 +86,13 @@ export function AbilitiesSkillsPanel({
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <Card className="lg:col-span-1">
         <CardHeader>
-          <CardTitle className="text-base">Yetenek Puanları</CardTitle>
+          <CardTitle className="text-base">{t("Ability Scores", "Yetenek Puanları")}</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-2">
           {ABILITY_KEYS.map((key) => (
             <div key={key} className="flex flex-col gap-1 rounded-md border border-border p-2 text-center">
               <span className="text-xs text-muted-foreground">
-                {ABILITY_ABBR[key]} · {ABILITY_FULL_TR[key]}
+                {ABILITY_ABBR[key]} · {abilityFullName(key, language)}
               </span>
               <Input
                 type="number"
@@ -108,7 +110,7 @@ export function AbilitiesSkillsPanel({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Kurtulma Zarları</CardTitle>
+          <CardTitle className="text-base">{t("Saving Throws", "Kurtulma Zarları")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {ABILITY_KEYS.map((key) => {
@@ -125,15 +127,15 @@ export function AbilitiesSkillsPanel({
             );
           })}
           <div className="mt-2 flex flex-col gap-1 border-t border-border pt-2 text-sm text-muted-foreground">
-            <span>Yetkinlik Bonusu: {formatModifier(profBonus)}</span>
-            <span>Pasif Algı: {passivePerception(perceptionBonus)}</span>
+            <span>{t("Proficiency Bonus", "Yetkinlik Bonusu")}: {formatModifier(profBonus)}</span>
+            <span>{t("Passive Perception", "Pasif Algı")}: {passivePerception(perceptionBonus)}</span>
           </div>
         </CardContent>
       </Card>
 
       <Card className="lg:col-span-1 lg:row-span-2">
         <CardHeader>
-          <CardTitle className="text-base">Beceriler</CardTitle>
+          <CardTitle className="text-base">{t("Skills", "Beceriler")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1.5">
           {!skills ? (
@@ -141,7 +143,9 @@ export function AbilitiesSkillsPanel({
           ) : (
             skills
               .slice()
-              .sort((a, b) => translateSkill(a.index, a.name).localeCompare(translateSkill(b.index, b.name), "tr"))
+              .sort((a, b) =>
+                translateSkill(a.index, a.name, language).localeCompare(translateSkill(b.index, b.name, language), language)
+              )
               .map((skill) => {
                 const key = skill.ability_score.index as AbilityKey;
                 const proficient = character.skillProficiencies.includes(skill.index);
@@ -152,7 +156,7 @@ export function AbilitiesSkillsPanel({
                     <span className="flex items-center gap-2">
                       <ProficiencyMark checked={proficient} />
                       <span className="w-8 text-xs text-muted-foreground">{ABILITY_ABBR[key]}</span>
-                      {translateSkill(skill.index, skill.name)}
+                      {translateSkill(skill.index, skill.name, language)}
                       {proficient && expertiseSlots > 0 && (() => {
                         const atCap = !expertise && character.skillExpertise.length >= expertiseSlots;
                         return (
@@ -160,7 +164,7 @@ export function AbilitiesSkillsPanel({
                             type="button"
                             onClick={() => toggleExpertise(skill.index, !expertise)}
                             disabled={atCap}
-                            title={`Uzmanlık (Expertise) — ${character.skillExpertise.length} / ${expertiseSlots}`}
+                            title={`${t("Expertise", "Uzmanlık (Expertise)")} — ${character.skillExpertise.length} / ${expertiseSlots}`}
                           >
                             <Badge
                               variant={expertise ? "default" : "outline"}
